@@ -503,6 +503,9 @@ The following settings are available:
   :::
 : uses the `micromamba` binary instead of `conda` to create the Conda environments. For details see the [Micromamba documentation](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
 
+`conda.usePixi`
+: TODO
+
 Read the {ref}`conda-page` page to learn more about how to use Conda environments with Nextflow.
 
 (config-dag)=
