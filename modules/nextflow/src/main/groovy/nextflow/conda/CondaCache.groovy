@@ -296,16 +296,25 @@ class CondaCache {
 
         def cmd
         if( isYamlFilePath(condaEnv) ) {
-            final target = isYamlUriPath(condaEnv) ? condaEnv : Escape.path(makeAbsolute(condaEnv))
-            cmd = "${binaryName} env create --prefix ${Escape.path(prefixPath)} --file ${target}"
+            if( binaryName == 'pixi' )
+                cmd = "${binaryName} TODO"
+            else
+                final target = isYamlUriPath(condaEnv) ? condaEnv : Escape.path(makeAbsolute(condaEnv))
+                cmd = "${binaryName} env create --prefix ${Escape.path(prefixPath)} --file ${target}"
         }
         else if( isTextFilePath(condaEnv) ) {
-            cmd = "${binaryName} create ${opts}--yes --quiet --prefix ${Escape.path(prefixPath)} --file ${Escape.path(makeAbsolute(condaEnv))}"
+            if( binaryName == 'pixi' )
+                cmd = "${binaryName} TODO"
+            else
+                cmd = "${binaryName} create ${opts}--yes --quiet --prefix ${Escape.path(prefixPath)} --file ${Escape.path(makeAbsolute(condaEnv))}"
         }
 
         else {
             final channelsOpt = channels.collect(it -> "-c $it ").join('')
-            cmd = "${binaryName} create ${opts}--yes --quiet --prefix ${Escape.path(prefixPath)} ${channelsOpt}$condaEnv"
+            if( binaryName == 'pixi' )
+                cmd = "${binaryName} TODO"
+            else
+                cmd = "${binaryName} create ${opts}--yes --quiet --prefix ${Escape.path(prefixPath)} ${channelsOpt}$condaEnv"
         }
 
         try {
