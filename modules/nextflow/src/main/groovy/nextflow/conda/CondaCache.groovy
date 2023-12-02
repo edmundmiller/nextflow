@@ -62,7 +62,9 @@ class CondaCache {
 
     private boolean useMamba 
 
-    private boolean useMicromamba 
+    private boolean useMicromamba
+
+    private boolean usePixi
 
     private Path configCacheDir0
 
@@ -83,6 +85,8 @@ class CondaCache {
             return "mamba"
         if (useMicromamba) 
             return "micromamba"
+        if (usePixi)
+            return "pixi"
         return "conda"
     }
 
@@ -109,12 +113,21 @@ class CondaCache {
 
         if( config.useMamba && config.useMicroMamba)
             throw new IllegalArgumentException("Both conda.useMamba and conda.useMicromamba were enabled -- Please choose only one")
+
+        if( config.useMamba && config.usePixi)
+            throw new IllegalArgumentException("Both conda.useMamba and conda.usePixi were enabled -- Please choose only one")
+
+        if( config.usePixi && config.useMicroMamba)
+            throw new IllegalArgumentException("Both conda.usePixi and conda.useMicromamba were enabled -- Please choose only one")
         
         if( config.useMamba )
             useMamba = config.useMamba as boolean
 
         if( config.useMicromamba )
             useMicromamba = config.useMicromamba as boolean
+
+        if( config.usePixi )
+            usePixi = config.usePixi as boolean
 
         if( config.getChannels() )
             channels = config.getChannels()
