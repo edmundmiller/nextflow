@@ -386,6 +386,17 @@ class CondaCacheTest extends Specification {
         !cache.@useMamba
         cache.@useMicromamba
         cache.binaryName == "micromamba"
+
+        when:
+        cache = new CondaCache(new CondaConfig(createTimeout: '5 min', createOptions: '--foo --bar', cacheDir: '/conda/cache', usePixi: true))
+        then:
+        cache.createTimeout.minutes == 5
+        cache.createOptions == '--foo --bar'
+        cache.configCacheDir0 == Paths.get('/conda/cache')
+        !cache.@useMamba
+        !cache.@useMicromamba
+        cache.@usePixi
+        cache.binaryName == "pixi"
     }
 
     def 'should define cache dir from config' () {
@@ -459,5 +470,81 @@ class CondaCacheTest extends Specification {
 
         cleanup:
         folder?.deleteDir()
+    }
+
+    // Pixi
+
+    // TODO
+    def 'should create a pixi environment' () {
+
+        given:
+        def ENV = 'bwa=1.1.1'
+        def PREFIX = Files.createTempDirectory('foo')
+        def cache = Spy(new CondaCache(useMamba: true))
+
+        when:
+        // the prefix directory exists ==> no mamba command is executed
+        def result = cache.createLocalCondaEnv(ENV)
+        then:
+        1 * cache.condaPrefixPath(ENV) >> PREFIX
+        0 * cache.isYamlFilePath(ENV)
+        0 * cache.runCommand(_)
+        result == PREFIX
+
+        when:
+        PREFIX.deleteDir()
+        result = cache.createLocalCondaEnv0(ENV, PREFIX)
+        then:
+        1 * cache.isYamlFilePath(ENV)
+        0 * cache.makeAbsolute(_)
+        1 * cache.runCommand("mamba create --mkdir --yes --quiet --prefix $PREFIX $ENV") >> null
+        result == PREFIX
+
+    }
+
+    // TODO
+    def 'should create a pixi environment using remote lock file' () {
+
+        given:
+        def ENV = 'http://foo.com/some/file-lock.yml'
+        def PREFIX = Files.createTempDirectory('foo')
+        def cache = Spy(new CondaCache(useMamba: true))
+
+        when:
+        // the prefix directory exists ==> no mamba command is executed
+        def result = cache.createLocalCondaEnv(ENV)
+        then:
+        1 * cache.condaPrefixPath(ENV) >> PREFIX
+        0 * cache.isYamlFilePath(ENV)
+        0 * cache.runCommand(_)
+        result == PREFIX
+
+        when:
+        PREFIX.deleteDir()
+        result = cache.createLocalCondaEnv0(ENV, PREFIX)
+        then:
+        1 * cache.isYamlFilePath(ENV)
+        0 * cache.makeAbsolute(_)
+        1 * cache.runCommand("mamba env create --prefix $PREFIX --file $ENV") >> null
+        result == PREFIX
+
+    }
+
+    // TODO
+    def 'should create pixi environment with options' () {
+        given:
+        def ENV = 'bwa=1.1.1'
+        def PREFIX = Paths.get('/foo/bar')
+        and:
+        def cache = Spy(new CondaCache(useMamba: true, createOptions: '--this --that'))
+
+        when:
+        def result = cache.createLocalCondaEnv0(ENV, PREFIX)
+        then:
+        1 * cache.isYamlFilePath(ENV)
+        1 * cache.isTextFilePath(ENV)
+        0 * cache.makeAbsolute(_)
+        1 * cache.runCommand("mamba create --this --that --mkdir --yes --quiet --prefix $PREFIX $ENV") >> null
+        result == PREFIX
     }
 }
