@@ -421,8 +421,8 @@ class AssetManager {
         provider?.getRepositoryUrl()
     }
 
-    String getDefaultBranch() {
-        getManifest().getDefaultBranch()
+    String getDefaultRevision() {
+        getManifest().getDefaultRevision()
     }
 
     @Memoized
@@ -747,7 +747,7 @@ class AssetManager {
     List<String> getRevisions(int level) {
 
         def current = getCurrentRevision()
-        def master = getDefaultBranch()
+        def master = getDefaultRevision()
 
         List<String> branches = getBranchList()
             .findAll { it.name.startsWith('refs/heads/') || it.name.startsWith('refs/remotes/origin/') }
@@ -778,7 +778,7 @@ class AssetManager {
     Map getBranchesAndTags(boolean checkForUpdates) {
         final result = [:]
         final current = getCurrentRevision()
-        final master = getDefaultBranch()
+        final master = getDefaultRevision()
 
         final branches = []
         final tags = []
@@ -907,7 +907,7 @@ class AssetManager {
         assert localPath
 
         def current = getCurrentRevision()
-        if( current != defaultBranch ) {
+        if( current != defaultRevision ) {
             if( !revision ) {
                 throw new AbortOperationException("Project `$project` is currently stuck on revision: $current -- you need to explicitly specify a revision with the option `-r` in order to use it")
             }
@@ -1052,7 +1052,7 @@ class AssetManager {
         }
 
         final iniFile = new IniFile().load(gitConfig)
-        final branch = manifest.getDefaultBranch()
+        final branch = manifest.getDefaultRevision()
         final remote = iniFile.getString("branch \"${branch}\"", "remote", "origin")
         final url = iniFile.getString("remote \"${remote}\"", "url")
         log.debug "Git config: $gitConfig; branch: $branch; remote: $remote; url: $url"

@@ -56,7 +56,7 @@ class GitlabRepositoryProvider extends RepositoryProvider {
         return "${config.endpoint}/api/v4/projects/${getProjectName()}"
     }
 
-    String getDefaultBranch() {
+    String getDefaultRevision() {
         def result = invokeAndParseResponse(getEndpointUrl()) ?. default_branch
         if( !result ) {
             log.debug "Unable to fetch repo default branch. Using `master` branch -- See https://gitlab.com/gitlab-com/support-forum/issues/1655#note_26132691"
@@ -85,7 +85,7 @@ class GitlabRepositoryProvider extends RepositoryProvider {
         // see
         //  https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository
         //
-        final ref = revision ?: getDefaultBranch()
+        final ref = revision ?: getDefaultRevision()
         final encodedPath = URLEncoder.encode(path,'utf-8')
         return "${config.endpoint}/api/v4/projects/${getProjectName()}/repository/files/${encodedPath}?ref=${ref}"
     }

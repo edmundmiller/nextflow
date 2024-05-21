@@ -84,7 +84,7 @@ class Const {
 
     static public final File DEFAULT_ROOT = System.getenv('NXF_ASSETS') ? new File(System.getenv('NXF_ASSETS')) : APP_HOME_DIR.resolve('assets').toFile()
 
-    static public final String DEFAULT_BRANCH = 'master'
+    static public final String DEFAULT_REVISION = 'master'
 
     static public final String SCOPE_SEP = ':'
 
