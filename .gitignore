@@ -6,7 +6,6 @@
 .cache/*
 .nextflow*
 .node-nextflow*
-.devcontainer
 .vscode/*
 */*/bin/*
 **/build/**
