@@ -89,7 +89,7 @@ class CmdInfoTest extends Specification {
         json.repository == "https://github.com/nextflow-io/hello"
         json.localPath == "$tempDir/nextflow-io/hello"
         json.manifest.mainScript == 'main.nf'
-        json.manifest.defaultRevision == 'master'
+        json.manifest.defaultBranch == 'master'
         json.revisions.current == 'master'
         json.revisions.master == 'master'
         json.revisions.branches.size()>1
@@ -115,7 +115,7 @@ class CmdInfoTest extends Specification {
         json.repository == "https://github.com/nextflow-io/hello"
         json.localPath == "$tempDir/nextflow-io/hello"
         json.manifest.mainScript == 'main.nf'
-        json.manifest.defaultRevision == 'master'
+        json.manifest.defaultBranch == 'master'
         json.revisions.current == 'master'
         json.revisions.master == 'master'
         json.revisions.branches.size()>1

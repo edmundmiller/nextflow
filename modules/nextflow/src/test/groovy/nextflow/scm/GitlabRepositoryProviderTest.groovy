@@ -81,7 +81,7 @@ class GitlabRepositoryProviderTest extends Specification {
         when:
         def provider = new GitlabRepositoryProvider('pditommaso/hello', config)
         then:
-        provider.getDefaultRevision() == 'master'
+        provider.getDefaultBranch() == 'master'
 
     }
 

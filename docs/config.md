@@ -1199,7 +1199,7 @@ The following settings are available:
 `manifest.author`
 : Project author name (use a comma to separate multiple names).
 
-`manifest.defaultRevision`
+`manifest.defaultBranch`
 : Git repository default branch (default: `master`).
 
 `manifest.description`

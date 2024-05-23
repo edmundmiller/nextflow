@@ -72,15 +72,15 @@ class AssetManagerTest extends Specification {
     }
 
     // Helper method to grab the default brasnch if set in ~/.gitconfig
-    String getLocalDefaultRevision() {
-        def defaultRevision = 'master'
+    String getLocalDefaultBranch() {
+        def defaultBranch = 'master'
         def gitconfig = Paths.get(System.getProperty('user.home'),'.gitconfig');
         if(gitconfig.exists()) {
             def config = new Config()
             config.fromText(gitconfig.text)
-            defaultRevision = config.getString('init', null, 'defaultRevision') ?: 'master'
+            defaultBranch = config.getString('init', null, 'defaultBranch') ?: 'master'
         }
-        return defaultRevision
+        return defaultBranch
     }
 
     def testList() {
@@ -375,7 +375,7 @@ class AssetManagerTest extends Specification {
                 manifest {
                     homePage = 'http://foo.com'
                     mainScript = 'hello.nf'
-                    defaultRevision = 'super-stuff'
+                    defaultBranch = 'super-stuff'
                     description = 'This pipeline do this and that'
                     author = 'Hi Dude'
                 }
@@ -391,7 +391,7 @@ class AssetManagerTest extends Specification {
         holder.build('foo/bar')
         then:
         holder.getMainScriptName() == 'hello.nf'
-        holder.manifest.getDefaultRevision() == 'super-stuff'
+        holder.manifest.getDefaultBranch() == 'super-stuff'
         holder.manifest.getHomePage() == 'http://foo.com'
         holder.manifest.getDescription() == 'This pipeline do this and that'
         holder.manifest.getAuthor() == 'Hi Dude'
@@ -414,7 +414,7 @@ class AssetManagerTest extends Specification {
         then:
         holder.getMainScriptName() == 'main.nf'
         holder.getHomePage() == 'https://github.com/foo/bar'
-        holder.manifest.getDefaultRevision() == 'master'
+        holder.manifest.getDefaultBranch() == 'master'
         holder.manifest.getDescription() == null
 
     }
@@ -476,7 +476,7 @@ class AssetManagerTest extends Specification {
         then:
         script.localPath == dir
         script.commitId == commit.name()
-        script.revision == getLocalDefaultRevision()
+        script.revision == getLocalDefaultBranch()
         script.parent == dir
         script.text == "println 'Hello world'"
         script.repository == 'https://github.com/nextflow-io/nextflow'
@@ -493,7 +493,7 @@ class AssetManagerTest extends Specification {
         then:
         script.localPath == dir
         script.commitId == commit.name()
-        script.revision == getLocalDefaultRevision()
+        script.revision == getLocalDefaultBranch()
         script.parent == dir
         script.text == "this is foo content"
         script.repository == 'https://github.com/nextflow-io/nextflow'

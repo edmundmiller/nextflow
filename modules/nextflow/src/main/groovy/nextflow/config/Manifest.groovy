@@ -19,7 +19,7 @@ package nextflow.config
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import static nextflow.Const.DEFAULT_REVISION
+import static nextflow.Const.DEFAULT_BRANCH
 import static nextflow.Const.DEFAULT_MAIN_FILE_NAME
 /**
  * Models the nextflow config manifest settings
@@ -51,8 +51,8 @@ class Manifest {
     }
 
 
-    String getDefaultRevision() {
-        target.defaultRevision ?: DEFAULT_REVISION
+    String getDefaultBranch() {
+        target.defaultBranch ?: DEFAULT_BRANCH
     }
 
     String getDescription() {
@@ -101,7 +101,7 @@ class Manifest {
     Map toMap() {
         final result = new HashMap(10)
         result.author = getAuthor()
-        result.defaultRevision = getDefaultRevision()
+        result.defaultBranch = getDefaultBranch()
         result.description = getDescription()
         result.homePage = homePage
         result.gitmodules = getGitmodules()

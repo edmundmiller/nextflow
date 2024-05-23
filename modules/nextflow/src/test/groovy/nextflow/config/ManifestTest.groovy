@@ -47,7 +47,7 @@ class ManifestTest extends Specification {
         then:
         manifest.with {
             homePage == null
-            defaultRevision == 'master'
+            defaultBranch == 'master'
             description == null
             author == null
             mainScript == 'main.nf'

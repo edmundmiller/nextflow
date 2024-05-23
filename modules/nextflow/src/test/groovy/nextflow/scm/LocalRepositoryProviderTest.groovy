@@ -161,13 +161,13 @@ class LocalRepositoryProviderTest extends Specification {
         repo.commit().setSign(false).setMessage('Second commit').call()
         def ref2 = repo.branchCreate().setName('branch_2').call()
 
-        // Use this user's custom defaultRevision name if set in ~/.gitconfig
-        def defaultRevision = 'master'
+        // Use this user's custom defaultBranch name if set in ~/.gitconfig
+        def defaultBranch = 'master'
         def gitconfig = Paths.get(System.getProperty('user.home'),'.gitconfig');
         if(gitconfig.exists()) {
             def config = new Config()
             config.fromText(gitconfig.text)
-            defaultRevision = config.getString('init', null, 'defaultRevision') ?: 'master'
+            defaultBranch = config.getString('init', null, 'defaultBranch') ?: 'master'
         }
 
         and:
@@ -179,7 +179,7 @@ class LocalRepositoryProviderTest extends Specification {
         then:
         branches.size() == 3
         and:
-        branches.find { it.name == defaultRevision }
+        branches.find { it.name == defaultBranch }
         and:
         branches.find { it.name == 'branch_1' }.commitId == ref1.getObjectId().name()
         and:
