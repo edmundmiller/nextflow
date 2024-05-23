@@ -22,6 +22,7 @@ import nextflow.exception.AbortOperationException
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Config
 import org.junit.Rule
+import spock.lang.Ignore
 import spock.lang.Requires
 import spock.lang.Specification
 import test.TemporaryPath
@@ -398,6 +399,33 @@ class AssetManagerTest extends Specification {
 
     }
 
+    def 'should read a default tag from the manifest file' () {
+
+        given:
+        def config =
+                '''
+                manifest {
+                    homePage = 'http://foo.com'
+                    mainScript = 'hello.nf'
+                    defaultBranch = '1.0.0'
+                    description = 'This pipeline do this and that'
+                    author = 'Hi Dude'
+                }
+                '''
+        def dir = tempDir.getRoot()
+        dir.resolve('foo/bar').mkdirs()
+        dir.resolve('foo/bar/nextflow.config').text = config
+        dir.resolve('foo/bar/.git').mkdir()
+        dir.resolve('foo/bar/.git/config').text = GIT_CONFIG_TEXT
+
+        when:
+        def holder = new AssetManager()
+        holder.build('foo/bar')
+        then:
+        holder.manifest.getDefaultBranch() == '1.0.0'
+
+    }
+
     def 'should return default main script file' () {
 
         given:
@@ -582,6 +610,27 @@ class AssetManagerTest extends Specification {
 
     @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
     def 'should download tag specified'() {
+
+        given:
+        def folder = tempDir.getRoot()
+        def token = System.getenv('NXF_GITHUB_ACCESS_TOKEN')
+        def manager = new AssetManager().build('nextflow-io/nf-test-branch', [providers: [github: [auth: token]]])
+
+        when:
+        manager.download("v0.1")
+        then:
+        folder.resolve('nextflow-io/nf-test-branch/.git').isDirectory()
+        and:
+        folder.resolve('nextflow-io/nf-test-branch/workflow.nf').text == "println 'Hello'\n"
+
+        when:
+        manager.download()
+        then:
+        noExceptionThrown()
+    }
+
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'should use a default tag'() {
 
         given:
         def folder = tempDir.getRoot()
