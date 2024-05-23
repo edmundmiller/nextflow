@@ -905,9 +905,9 @@ class AssetManager {
      */
     void checkout( String revision = null ) {
         assert localPath
-
         def current = getCurrentRevision()
         if( current != defaultBranch ) {
+            // NOTE This is the issue
             if( !revision ) {
                 throw new AbortOperationException("Project `$project` is currently stuck on revision: $current -- you need to explicitly specify a revision with the option `-r` in order to use it")
             }
