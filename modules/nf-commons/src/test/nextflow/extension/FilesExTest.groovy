@@ -21,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+import spock.lang.IgnoreIf
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -604,6 +605,7 @@ class FilesExTest extends Specification {
     }
 
 
+    @IgnoreIf({System.getenv('IMPURE')})
     def testSetReadonly() {
 
         setup:

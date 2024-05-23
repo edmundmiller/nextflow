@@ -21,6 +21,7 @@ import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
 import nextflow.exception.AbortOperationException
+import spock.lang.IgnoreIf
 import spock.lang.Specification
 /**
  *
@@ -193,6 +194,7 @@ class LocalSecretsProviderTest extends Specification {
         folder.deleteDir()
     }
 
+    @IgnoreIf({System.getenv('IMPURE')})
     def 'should create temp file' () {
         given:
         def folder = Files.createTempDirectory('test')
