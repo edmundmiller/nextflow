@@ -282,7 +282,7 @@ class CmdRunTest extends Specification {
     }
 
     @Unroll
-    def 'should guss is repo' () {
+    def 'should guess is repo' () {
         expect:
         CmdRun.guessIsRepo(PATH) == EXPECTED
         
