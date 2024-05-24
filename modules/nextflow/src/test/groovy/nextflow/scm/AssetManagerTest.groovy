@@ -20,10 +20,13 @@ import spock.lang.IgnoreIf
 import spock.lang.Tag
 import spock.lang.Unroll
 
+import nextflow.cli.CmdRun
 import nextflow.exception.AbortOperationException
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Config
 import org.junit.Rule
+import spock.lang.Ignore
+import spock.lang.PendingFeature
 import spock.lang.Requires
 import spock.lang.Specification
 import test.TemporaryPath
@@ -865,4 +868,296 @@ class AssetManagerTest extends Specification {
         thrown(RepositoryNotFoundException)
     }
 
+    def 'should read a default tag from the manifest file' () {
+
+        given:
+        def config =
+                '''
+                manifest {
+                    homePage = 'http://foo.com'
+                    mainScript = 'hello.nf'
+                    defaultBranch = '1.0.0'
+                    description = 'This pipeline do this and that'
+                    author = 'Hi Dude'
+                }
+                '''
+        def dir = tempDir.getRoot()
+        dir.resolve('foo/bar').mkdirs()
+        dir.resolve('foo/bar/nextflow.config').text = config
+        dir.resolve('foo/bar/.git').mkdir()
+        dir.resolve('foo/bar/.git/config').text = GIT_CONFIG_TEXT
+
+        when:
+        def holder = new AssetManager()
+        holder.build('foo/bar')
+        then:
+        holder.manifest.getDefaultBranch() == '1.0.0'
+
+    }
+
+    def 'should return default main script file' () {
+
+        given:
+        def dir = tempDir.getRoot()
+        dir.resolve('foo/bar').mkdirs()
+        dir.resolve('foo/bar/nextflow.config').text = 'empty: 1'
+        dir.resolve('foo/bar/.git').mkdir()
+        dir.resolve('foo/bar/.git/config').text = GIT_CONFIG_TEXT
+
+        when:
+        def holder = new AssetManager()
+        holder.build('foo/bar')
+
+        then:
+        holder.getMainScriptName() == 'main.nf'
+        holder.getHomePage() == 'https://github.com/foo/bar'
+        holder.manifest.getDefaultBranch() == null
+        holder.manifest.getDescription() == null
+
+    }
+
+    def 'should parse git config and return the remote url' () {
+
+        given:
+        def dir = tempDir.root
+        dir.resolve('.git').mkdir()
+        dir.resolve('.git/config').text = GIT_CONFIG_LONG
+
+        when:
+        def manager = new AssetManager().setLocalPath(dir.toFile())
+        then:
+        manager.getGitConfigRemoteUrl() == 'git@github.com:nextflow-io/nextflow.git'
+
+    }
+
+    def 'should parse git config and return the remote host' () {
+
+        given:
+        def dir = tempDir.root
+        dir.resolve('.git').mkdir()
+        dir.resolve('.git/config').text = GIT_CONFIG_LONG
+
+        when:
+        def manager = new AssetManager().setLocalPath(dir.toFile())
+        then:
+        manager.getGitConfigRemoteDomain() == 'github.com'
+
+    }
+
+    def 'should create a script file object' () {
+
+        given:
+        def dir = tempDir.root
+        // create the repo dir
+        dir.resolve('main.nf').text = "println 'Hello world'"
+        dir.resolve('nextflow.config').text = 'manifest {  }'
+        dir.resolve('foo.nf').text = 'this is foo content'
+
+        def init = Git.init()
+        def repo = init.setDirectory( dir.toFile() ).call()
+        repo.add().addFilepattern('.').call()
+        def commit = repo.commit().setSign(false).setAll(true).setMessage('First commit').call()
+        repo.close()
+
+        // append fake remote data
+        dir.resolve('.git/config').text = GIT_CONFIG_TEXT
+
+        when:
+        def p = Mock(RepositoryProvider) { getRepositoryUrl() >> 'https://github.com/nextflow-io/nextflow' }
+        and:
+        def manager = new AssetManager(provider: p)
+                .setLocalPath(dir.toFile())
+                .setProject('nextflow-io/nextflow')
+        and:
+        def script = manager.getScriptFile()
+        then:
+        script.localPath == dir
+        script.commitId == commit.name()
+        script.revision == getLocalDefaultBranch()
+        script.parent == dir
+        script.text == "println 'Hello world'"
+        script.repository == 'https://github.com/nextflow-io/nextflow'
+        script.projectName == 'nextflow-io/nextflow'
+
+        when:
+        p = Mock(RepositoryProvider) { getRepositoryUrl() >> 'https://github.com/nextflow-io/nextflow' }
+        and:
+        manager = new AssetManager(provider: p)
+                .setLocalPath(dir.toFile())
+                .setProject('nextflow-io/nextflow')
+        and:
+        script = manager.getScriptFile('foo.nf')
+        then:
+        script.localPath == dir
+        script.commitId == commit.name()
+        script.revision == getLocalDefaultBranch()
+        script.parent == dir
+        script.text == "this is foo content"
+        script.repository == 'https://github.com/nextflow-io/nextflow'
+        script.projectName == 'nextflow-io/nextflow'
+
+    }
+
+    def 'should return project name from git url' () {
+
+        AssetManager manager
+        String result
+
+        when:
+        manager = new AssetManager()
+        result = manager.resolveNameFromGitUrl('nextflow/pipe')
+        then:
+        result == null
+        manager.hub == null
+
+        when:
+        manager = new AssetManager()
+        result = manager.resolveNameFromGitUrl('https://gitlab.com/pditommaso/hello.git')
+        then:
+        result == 'pditommaso/hello'
+        manager.hub == 'gitlab'
+
+        when:
+        manager = new AssetManager()
+        result = manager.resolveNameFromGitUrl('file:/user/repo/projects/hello.git')
+        then:
+        result == 'local/hello'
+        manager.hub == 'file:/user/repo/projects'
+
+        when:
+        manager = new AssetManager()
+        manager.providerConfigs.add( new ProviderConfig('local-scm', [platform: 'github', server: 'http://foo.bar.com']) )
+        result = manager.resolveNameFromGitUrl('https://foo.bar.com/project/xyz.git')
+        then:
+        result == 'project/xyz'
+        manager.hub == 'local-scm'
+
+        when:
+        manager = new AssetManager()
+        manager.providerConfigs.add( new ProviderConfig('gitea', [platform: 'gitea', server: 'http://my-server.org/sub1']) )
+        result = manager.resolveNameFromGitUrl('http://my-server.org/sub1/foo/bar.git')
+        then:
+        result == 'foo/bar'
+        manager.hub == 'gitea'
+
+    }
+
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'should download branch specified'() {
+
+        given:
+        def folder = tempDir.getRoot()
+        def token = System.getenv('NXF_GITHUB_ACCESS_TOKEN')
+        def manager = new AssetManager().build('nextflow-io/nf-test-branch', [providers: [github: [auth: token]]])
+
+        when:
+        manager.download("dev")
+        then:
+        folder.resolve('nextflow-io/nf-test-branch/.git').isDirectory()
+        and:
+        folder.resolve('nextflow-io/nf-test-branch/workflow.nf').text == "println 'Hello'\n"
+
+        when:
+        manager.download()
+        then:
+        noExceptionThrown()
+    }
+
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'should fetch main script from branch specified'() {
+
+        given:
+        def token = System.getenv('NXF_GITHUB_ACCESS_TOKEN')
+        def manager = new AssetManager().build('nextflow-io/nf-test-branch', [providers: [github: [auth: token]]])
+
+        expect:
+        manager.checkValidRemoteRepo('dev')
+        and:
+        manager.getMainScriptName() == 'workflow.nf'
+
+    }
+
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'should download tag specified'() {
+
+        given:
+        def folder = tempDir.getRoot()
+        def token = System.getenv('NXF_GITHUB_ACCESS_TOKEN')
+        def manager = new AssetManager().build('nextflow-io/nf-test-branch', [providers: [github: [auth: token]]])
+
+        when:
+        manager.download("v0.1")
+        then:
+        folder.resolve('nextflow-io/nf-test-branch/.git').isDirectory()
+        and:
+        folder.resolve('nextflow-io/nf-test-branch/workflow.nf').text == "println 'Hello'\n"
+
+        when:
+        manager.download()
+        then:
+        noExceptionThrown()
+    }
+
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'should identify default branch when downloading repo'() {
+
+        given:
+        def folder = tempDir.getRoot()
+        def token = System.getenv('NXF_GITHUB_ACCESS_TOKEN')
+        def manager = new AssetManager().build('nextflow-io/socks', [providers: [github: [auth: token]]])
+
+        when:
+        // simulate calling `nextflow run nextflow-io/socks` without specifying a revision
+        manager.download()
+        manager.checkout(null)
+        then:
+        folder.resolve('nextflow-io/socks/.git').isDirectory()
+        manager.getCurrentRevision() == 'main'
+
+        when:
+        manager.download()
+        then:
+        noExceptionThrown()
+    }
+
+    @PendingFeature
+    @Requires({System.getenv('NXF_GITHUB_ACCESS_TOKEN')})
+    def 'can filter remote branches'() {}
+    @PendingFeature
+    def 'should work with defaultBranch = master'() {}
+    @PendingFeature
+    def 'should not warn if project uses a tag as a defaultBranch'() {}
+    @PendingFeature
+    def 'should work with no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to latest tag if no defaultBranch'() {}
+    @PendingFeature
+    def 'should fallback to master if no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to version tag if manifest version and no defaultBranch'() {}
+    // Test version = '2.3.0-RC1' with defaultRevision
+    @PendingFeature
+    def 'should handle release candidate versions'() {}
+    // Test version = '2.2.1-hotfix' with defaultRevision = '2.2.0'
+    @PendingFeature
+    def 'should handle hotfix versions'() {}
+    // Test handling of feature branches while maintaining stable defaultRevision
+    @PendingFeature
+    def 'should support multiple development branches'() {}
+    // Test downgrading defaultRevision for emergency rollbacks
+    @PendingFeature
+    def 'should handle version rollback scenarios'() {}
+    // Test that development version is always ahead of defaultRevision
+    @PendingFeature
+    def 'should validate version and defaultRevision compatibility'() {}
+    @PendingFeature
+    def 'should not warn if project uses a tag as a defaultBranch'() {}
+    @PendingFeature
+    def 'should work with no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to latest tag if no defaultBranch'() {}
+    @PendingFeature
+    def 'should fallback to master if no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to version tag if manifest version and no defaultBranch'() {}
 }
