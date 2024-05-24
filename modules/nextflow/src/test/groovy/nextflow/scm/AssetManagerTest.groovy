@@ -650,4 +650,11 @@ class AssetManagerTest extends Specification {
         noExceptionThrown()
     }
 
+    // TODO should work with defaultBranch = master
+    // TODO should work with defaultBranch = 1.0.0
+    // TODO should work with no defaultBranch
+    // TODO should default to latest version if no defaultBranch
+    // TODO should fallback to master if no defaultBranch
+    // TODO should default to version if there's a version and no defaultBranch
+
 }
