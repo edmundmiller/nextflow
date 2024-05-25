@@ -18,11 +18,13 @@ package nextflow.scm
 
 import spock.lang.IgnoreIf
 
+import nextflow.cli.CmdRun
 import nextflow.exception.AbortOperationException
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Config
 import org.junit.Rule
 import spock.lang.Ignore
+import spock.lang.PendingFeature
 import spock.lang.Requires
 import spock.lang.Specification
 import test.TemporaryPath
@@ -651,10 +653,28 @@ class AssetManagerTest extends Specification {
     }
 
     // TODO should work with defaultBranch = master
-    // TODO should work with defaultBranch = 1.0.0
+    @PendingFeature
+    def 'should not warn if project uses a tag as a defaultBranch'() {
+        given:
+        def ENV = [FOO: '/something', NXF_DEBUG: 'true']
+
+        when:
+        new CmdRun(revision: 'xyz')
+
+        then:
+        def warning = capture
+                .toString()
+                .readLines()
+                .findResults { line -> line.contains('WARN') ? line : null }
+                .join('\n')
+        and:
+        !warning
+        noExceptionThrown()
+    }
+
     // TODO should work with no defaultBranch
-    // TODO should default to latest version if no defaultBranch
+    // TODO should default to latest tag if no defaultBranch
     // TODO should fallback to master if no defaultBranch
-    // TODO should default to version if there's a version and no defaultBranch
+    // TODO should default to version tag if there's a manifest version and no defaultBranch
 
 }
