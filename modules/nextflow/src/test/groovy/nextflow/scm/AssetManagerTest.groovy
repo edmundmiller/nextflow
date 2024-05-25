@@ -652,7 +652,8 @@ class AssetManagerTest extends Specification {
         noExceptionThrown()
     }
 
-    // TODO should work with defaultBranch = master
+    @PendingFeature
+    def 'should work with defaultBranch = master'() {}
     @PendingFeature
     def 'should not warn if project uses a tag as a defaultBranch'() {
         given:
@@ -672,9 +673,13 @@ class AssetManagerTest extends Specification {
         noExceptionThrown()
     }
 
-    // TODO should work with no defaultBranch
-    // TODO should default to latest tag if no defaultBranch
-    // TODO should fallback to master if no defaultBranch
-    // TODO should default to version tag if there's a manifest version and no defaultBranch
+    @PendingFeature
+    def 'should work with no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to latest tag if no defaultBranch'() {}
+    @PendingFeature
+    def 'should fallback to master if no defaultBranch'() {}
+    @PendingFeature
+    def 'should default to version tag if manifest version and no defaultBranch'() {}
 
 }
