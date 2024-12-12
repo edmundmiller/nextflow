@@ -55,8 +55,12 @@ class Manifest {
         target.defaultBranch ?: DEFAULT_BRANCH
     }
 
+    String getDefaultRevision() {
+        target.defaultRevision ?: getVersion() ?: getDefaultBranch()
+    }
+
     String getDescription() {
-        target.description 
+        target.description
     }
 
     String getAuthor() {
@@ -102,6 +106,7 @@ class Manifest {
         final result = new HashMap(10)
         result.author = getAuthor()
         result.defaultBranch = getDefaultBranch()
+        result.defaultRevision = getDefaultRevision()
         result.description = getDescription()
         result.homePage = homePage
         result.gitmodules = getGitmodules()
