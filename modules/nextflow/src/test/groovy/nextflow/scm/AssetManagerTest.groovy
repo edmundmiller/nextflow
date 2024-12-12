@@ -652,7 +652,6 @@ class AssetManagerTest extends Specification {
         noExceptionThrown()
     }
 
-    @PendingFeature
     def 'should work with defaultBranch = master'() {
         given:
         def config = '''
@@ -747,7 +746,6 @@ class AssetManagerTest extends Specification {
         holder.manifest.getDefaultBranch() == 'master'
     }
 
-    @PendingFeature
     def 'should work with no defaultBranch'() {
         given:
         def config = '''
@@ -769,7 +767,6 @@ class AssetManagerTest extends Specification {
         holder.manifest.getDefaultRevision() == 'master'
     }
 
-    @PendingFeature
     def 'should default to version tag if manifest version and no defaultBranch'() {
         given:
         def config = '''
