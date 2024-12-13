@@ -55,6 +55,9 @@ class Manifest {
         target.defaultBranch ?: DEFAULT_BRANCH
     }
 
+    // 1. if defaultRevision is set, use that
+    // 2. if version is set, use that
+    // 3. Fallback to defaultBranch
     String getDefaultRevision() {
         target.defaultRevision ?: getVersion() ?: getDefaultBranch()
     }
