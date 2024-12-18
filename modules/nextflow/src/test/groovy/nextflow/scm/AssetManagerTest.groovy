@@ -950,7 +950,11 @@ class AssetManagerTest extends Specification {
         def dir = tempDir.root
         // create the repo dir
         dir.resolve('main.nf').text = "println 'Hello world'"
-        dir.resolve('nextflow.config').text = 'manifest {  }'
+        dir.resolve('nextflow.config').text = '''
+            manifest {
+                defaultBranch = 'master'
+            }
+            '''
         dir.resolve('foo.nf').text = 'this is foo content'
 
         def init = Git.init()
@@ -1125,16 +1129,6 @@ class AssetManagerTest extends Specification {
     def 'can filter remote branches'() {}
     @PendingFeature
     def 'should work with defaultBranch = master'() {}
-    @PendingFeature
-    def 'should not warn if project uses a tag as a defaultBranch'() {}
-    @PendingFeature
-    def 'should work with no defaultBranch'() {}
-    @PendingFeature
-    def 'should default to latest tag if no defaultBranch'() {}
-    @PendingFeature
-    def 'should fallback to master if no defaultBranch'() {}
-    @PendingFeature
-    def 'should default to version tag if manifest version and no defaultBranch'() {}
     // Test version = '2.3.0-RC1' with defaultRevision
     @PendingFeature
     def 'should handle release candidate versions'() {}
