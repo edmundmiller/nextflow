@@ -1073,6 +1073,7 @@ class AssetManagerTest extends Specification {
         !AssetManager.isRemoteBranch(local_master)
     }
 
+    @Tag("revision")
     def 'should work with defaultBranch = master'() {
         given:
         def config = '''
@@ -1105,6 +1106,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should not warn if project uses a tag as a defaultBranch'() {
         given:
         def config = '''
@@ -1133,6 +1135,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should work with no defaultBranch'() {
         given:
         def config = '''
@@ -1160,6 +1163,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should fallback to master if no defaultBranch'() {
         given:
         def config = '''
@@ -1185,6 +1189,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should default to version tag if manifest version and no defaultBranch'() {
         given:
         def config = '''
@@ -1212,6 +1217,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should respect priority order for defaultRevision'() {
         given:
         def config = '''
@@ -1241,6 +1247,7 @@ class AssetManagerTest extends Specification {
         }
     }
 
+    @Tag("revision")
     def 'should use defaultRevision when provided'() {
         given:
         def config = '''
@@ -1265,6 +1272,34 @@ class AssetManagerTest extends Specification {
             manifest.getDefaultBranch() == 'master'
             manifest.getDefaultRevision() == 'v1.0.0'
         }
+    }
+
+    @Tag("revision")
+    @Tag("checkout")
+    def 'should use defaultRevision value in checkout logic'() {
+        given:
+        def config = '''
+                manifest {
+                    homePage = 'http://foo.com'
+                    mainScript = 'hello.nf'
+                    defaultRevision = 'v1.0.0'
+                }
+                '''
+        def dir = tempDir.getRoot()
+        dir.resolve('foo/bar').mkdirs()
+        dir.resolve('foo/bar/nextflow.config').text = config
+        dir.resolve('foo/bar/.git').mkdir()
+        dir.resolve('foo/bar/.git/config').text = GIT_CONFIG_TEXT
+
+        when:
+        def holder = new AssetManager()
+        holder.build('foo/bar')
+
+        then:
+        holder.getDefaultRevision() == 'v1.0.0'
+        holder.getDefaultBranch() == 'master'
+        and:
+        holder.manifest.getDefaultRevision() == 'v1.0.0'
     }
 
     def 'should create a script file object' () {
