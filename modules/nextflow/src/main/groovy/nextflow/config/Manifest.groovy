@@ -55,7 +55,7 @@ class Manifest {
 
 
     String getDefaultBranch() {
-        target.defaultBranch ?: 'master'
+        target.defaultBranch
     }
 
     /**
