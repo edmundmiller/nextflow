@@ -390,7 +390,13 @@ class AssetManager {
     ScriptFile getScriptFile(String scriptName=null) {
 
         def result = new ScriptFile(getMainScriptFile(scriptName))
-        result.revisionInfo = getCurrentRevisionAndName()
+        def revInfo = getCurrentRevisionAndName()
+        // If we couldn't get revision info from git (e.g., due to a new repo or test environment),
+        // use the defaultRevision instead as a fallback
+        if (revInfo == null) {
+            revInfo = new RevisionInfo(null, getDefaultRevision(), RevisionInfo.Type.BRANCH)
+        }
+        result.revisionInfo = revInfo
         result.repository = getRepositoryUrl()
         result.localPath = localPath.toPath()
         result.projectName = project
@@ -427,6 +433,19 @@ class AssetManager {
         // if specified in manifest, that takes priority
         // otherwise look for a symbolic ref (refs/remotes/origin/HEAD)
         return getManifest().getDefaultBranch()
+                ?: getRemoteBranch()
+                ?: DEFAULT_BRANCH
+    }
+
+    /**
+     * Gets the default revision to use for checkout
+     * This differs from getDefaultBranch in that it can be a tag or commit hash,
+     * not just a branch name.
+     *
+     * @return The revision to use
+     */
+    String getDefaultRevision() {
+        return getManifest().getDefaultRevision()
                 ?: getRemoteBranch()
                 ?: DEFAULT_BRANCH
     }
@@ -937,18 +956,11 @@ class AssetManager {
         assert localPath
 
         def current = getCurrentRevision()
-        def defaultRev = getManifest().getDefaultRevision()
-        if( current != defaultRev ) {
-            // NOTE This is the issue
-            if( !revision ) {
-                Ref head = git.getRepository().findRef(Constants.HEAD);
+        def defaultRev = getDefaultRevision()
 
-                // try to resolve the the current object id to a tag name
-                Map<ObjectId, String> names = git.nameRev().addPrefix( "refs/tags/" ).add(head.objectId).call()
-                def tag = names.get( head.objectId ) ?: head.objectId.name()
-                if( current != tag ) {
-                    throw new AbortOperationException("Project `$project` is currently stuck on revision: $current -- you need to explicitly specify a revision with the option `-r` in order to use it")
-                }
+        if( current != defaultRev ) {
+            if( !revision ) {
+                throw new AbortOperationException("Project `$project` is currently stuck on revision: $current -- you need to explicitly specify a revision with the option `-r` in order to use it")
             }
         }
         if( !revision || revision == current ) {
