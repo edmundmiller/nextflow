@@ -826,8 +826,8 @@ class AssetManager {
 
     Map getBranchesAndTags(boolean checkForUpdates) {
         final result = [:]
-        final current = getCurrentRevision()
-        final master = getDefaultBranch()
+        final currentRevision = getCurrentRevision()
+        final defaultBranch = getDefaultBranch()
 
         final branches = []
         final tags = []
@@ -843,10 +843,10 @@ class AssetManager {
                 .findAll  { it.name.startsWith('refs/tags/') }
                 .each { Ref it -> tags << refToMap(it,remote) }
 
-        result.current = current    // current branch name
-        result.master = master      // master branch name
-        result.branches = branches  // collection of branches
-        result.tags = tags          // collect of tags
+        result.currentRevision = currentRevision
+        result.defaultBranch = defaultBranch
+        result.branches = branches
+        result.tags = tags
         return result
     }
 
