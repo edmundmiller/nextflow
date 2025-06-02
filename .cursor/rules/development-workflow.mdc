@@ -1,0 +1,93 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Development Workflow
+
+## Getting Started
+
+1. **Clone and build**:
+   ```bash
+   git clone https://github.com/nextflow-io/nextflow.git
+   cd nextflow
+   ./gradlew compile
+   ```
+
+2. **Run development version**:
+   ```bash
+   ./launch.sh run hello.nf
+   ```
+
+## Common Development Tasks
+
+### Adding a New Feature
+
+1. **Identify the module** - Core features go in `modules/nextflow/`, plugins in `plugins/`
+2. **Write tests first** - TDD approach is recommended
+3. **Follow existing patterns** - Check similar features for consistency
+4. **Update documentation** - Both code comments and user docs
+
+### Debugging
+
+1. **Enable debug logging**:
+   ```bash
+   export NXF_DEBUG=true
+   ./launch.sh run script.nf
+   ```
+
+2. **Use Groovy console**:
+   ```bash
+   ./console.sh
+   ```
+
+3. **Attach debugger** - Set breakpoints in IDE and run with debug flags
+
+### Code Style
+
+- Groovy conventions with 4-space indentation
+- Meaningful variable/method names
+- JavaDoc comments for public APIs
+- Use `@CompileStatic` where possible for performance
+
+## Important Files to Know
+
+### Entry Points
+- CLI launcher: [modules/nextflow/src/main/groovy/nextflow/cli/Launcher.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/cli/Launcher.groovy)
+- Main class: [modules/nextflow/src/main/groovy/nextflow/cli/CmdRun.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/cli/CmdRun.groovy)
+
+### Configuration
+- Default config: [modules/nextflow/src/main/resources/nextflow/config/default.groovy](mdc:modules/nextflow/src/main/resources/nextflow/config/default.groovy)
+- Version info: [VERSION](mdc:VERSION)
+
+### Key Interfaces
+- Process interface: [modules/nextflow/src/main/groovy/nextflow/processor/ProcessConfig.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/processor/ProcessConfig.groovy)
+- Channel interface: [modules/nextflow/src/main/groovy/nextflow/Channel.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/Channel.groovy)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Compilation errors** - Run `./gradlew clean compile`
+2. **Test failures** - Check for environment-specific issues
+3. **Plugin loading** - Verify service files in META-INF/services
+
+### Performance Profiling
+
+- Use JVM profilers (YourKit, JProfiler)
+- Enable trace reports: `-with-trace`
+- Monitor memory usage: `-with-report`
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/my-feature`
+3. Write tests and implementation
+4. Run full test suite: `./gradlew check`
+5. Submit pull request
+
+## Useful Resources
+
+- [Developer docs](mdc:docs/developer/)
+- [Contributing guide](mdc:CONTRIBUTING.md)
+- [Code of conduct](mdc:CODE-OF-CONDUCT.md)

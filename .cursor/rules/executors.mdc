@@ -1,0 +1,54 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Executors
+
+Executors handle process execution on different computing platforms.
+
+## Base Classes
+
+- Abstract executor: [modules/nextflow/src/main/groovy/nextflow/executor/Executor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/Executor.groovy)
+- Executor factory: [modules/nextflow/src/main/groovy/nextflow/executor/ExecutorFactory.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/ExecutorFactory.groovy)
+- Task handler: [modules/nextflow/src/main/groovy/nextflow/processor/TaskHandler.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/processor/TaskHandler.groovy)
+
+## Local Executors
+
+- Local executor: [modules/nextflow/src/main/groovy/nextflow/executor/LocalExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/LocalExecutor.groovy)
+- No-op executor: [modules/nextflow/src/main/groovy/nextflow/executor/NopeExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/NopeExecutor.groovy)
+
+## Grid Executors
+
+- SGE/UGE: [modules/nextflow/src/main/groovy/nextflow/executor/SgeExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/SgeExecutor.groovy)
+- SLURM: [modules/nextflow/src/main/groovy/nextflow/executor/SlurmExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/SlurmExecutor.groovy)
+- LSF: [modules/nextflow/src/main/groovy/nextflow/executor/LsfExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/LsfExecutor.groovy)
+- PBS/Torque: [modules/nextflow/src/main/groovy/nextflow/executor/PbsExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/PbsExecutor.groovy)
+- HTCondor: [modules/nextflow/src/main/groovy/nextflow/executor/CondorExecutor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/executor/CondorExecutor.groovy)
+
+## Cloud Executors (via plugins)
+
+- AWS Batch: [plugins/nf-amazon/src/main/nextflow/executor/AwsBatchExecutor.groovy](mdc:plugins/nf-amazon/src/main/nextflow/executor/AwsBatchExecutor.groovy)
+- Azure Batch: [plugins/nf-azure/src/main/nextflow/cloud/azure/batch/AzBatchExecutor.groovy](mdc:plugins/nf-azure/src/main/nextflow/cloud/azure/batch/AzBatchExecutor.groovy)
+- Google Life Sciences: [plugins/nf-google/src/main/nextflow/cloud/google/lifesciences/GoogleLifeSciencesExecutor.groovy](mdc:plugins/nf-google/src/main/nextflow/cloud/google/lifesciences/GoogleLifeSciencesExecutor.groovy)
+- Kubernetes: [plugins/nf-k8s/src/main/nextflow/k8s/K8sExecutor.groovy](mdc:plugins/nf-k8s/src/main/nextflow/k8s/K8sExecutor.groovy)
+
+## Common Patterns
+
+### Task Submission
+1. Create wrapper script with task details
+2. Submit to scheduler/platform
+3. Monitor task status
+4. Collect results and logs
+
+### Resource Management
+- CPU allocation
+- Memory requirements
+- Time limits
+- Queue/partition selection
+
+### Error Handling
+- Exit code checking
+- Log collection
+- Retry logic
+- Resource cleanup

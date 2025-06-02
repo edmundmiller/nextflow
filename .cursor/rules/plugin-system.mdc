@@ -1,0 +1,78 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Plugin System
+
+Nextflow uses a plugin architecture to extend functionality without modifying core code.
+
+## Plugin Infrastructure
+
+- Plugin manager: [modules/nf-commons/src/main/nextflow/plugin/PluginManager.groovy](mdc:modules/nf-commons/src/main/nextflow/plugin/PluginManager.groovy)
+- Plugin spec: [modules/nf-commons/src/main/nextflow/plugin/PluginSpec.groovy](mdc:modules/nf-commons/src/main/nextflow/plugin/PluginSpec.groovy)
+- Extension point: [modules/nf-commons/src/main/nextflow/plugin/ExtensionPoint.groovy](mdc:modules/nf-commons/src/main/nextflow/plugin/ExtensionPoint.groovy)
+
+## Creating Plugins
+
+### Plugin Structure
+```
+plugins/nf-myplugin/
+├── src/
+│   ├── main/
+│   │   ├── nextflow/         # Plugin implementation
+│   │   └── resources/
+│   │       └── META-INF/
+│   │           └── services/ # Service declarations
+│   └── test/                 # Plugin tests
+└── build.gradle              # Plugin build config
+```
+
+### Key Components
+
+1. **Plugin Descriptor** - META-INF/MANIFEST.MF with plugin metadata
+2. **Extension Points** - Interfaces plugins can implement
+3. **Service Files** - Declaration of provided services
+
+## Available Extension Points
+
+### Trace Observers
+- Interface: `nextflow.trace.TraceObserver`
+- Purpose: Monitor workflow execution events
+- Example: [Tower plugin](mdc:plugins/nf-tower/src/main/io/seqera/tower/plugin/TowerObserver.groovy)
+
+### File Systems
+- Interface: `nextflow.file.FileSystemProvider`
+- Purpose: Add support for custom file systems
+- Examples:
+  - [S3 file system](mdc:plugins/nf-amazon/src/main/nextflow/cloud/aws/nio/S3FileSystemProvider.groovy)
+  - [Azure file system](mdc:plugins/nf-azure/src/main/nextflow/cloud/azure/nio/AzFileSystemProvider.groovy)
+  - [GS file system](mdc:plugins/nf-google/src/main/nextflow/cloud/google/nio/GoogleStorageFileSystemProvider.groovy)
+
+### Executors
+- Interface: `nextflow.executor.Executor`
+- Purpose: Add support for new compute platforms
+- Service file: `META-INF/services/nextflow.executor.Executor`
+
+### Functions
+- Interface: `nextflow.plugin.extension.Function`
+- Purpose: Add custom functions to Nextflow DSL
+- Service file: `META-INF/services/nextflow.plugin.extension.Function`
+
+## Plugin Configuration
+
+Plugins can be configured in nextflow.config:
+```groovy
+plugins {
+    id 'nf-myplugin@1.0.0'
+}
+
+myplugin {
+    option1 = 'value1'
+    option2 = 'value2'
+}
+```
+
+## Plugin Development Guide
+
+Reference: [docs/developer/plugins.md](mdc:docs/developer/plugins.md)

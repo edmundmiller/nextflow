@@ -1,0 +1,59 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Build System
+
+Nextflow uses Gradle as its build system. The project follows a multi-module structure.
+
+## Build Configuration
+
+- Main build file: [build.gradle](mdc:build.gradle)
+- Settings: [settings.gradle](mdc:settings.gradle)
+- Properties: [gradle.properties](mdc:gradle.properties)
+- Wrapper: [gradlew](mdc:gradlew) (Unix) and [gradlew.bat](mdc:gradlew.bat) (Windows)
+
+## Key Gradle Tasks
+
+### Building
+- `./gradlew compile` - Compile all modules
+- `./gradlew jar` - Build JAR files
+- `./gradlew installDist` - Install distribution locally
+
+### Testing
+- `./gradlew test` - Run unit tests
+- `./gradlew check` - Run all checks including tests and code quality
+- `./gradlew test -Dtest.single=TestClassName` - Run specific test
+
+### Distribution
+- `./gradlew dist` - Create distribution package
+- `./gradlew publishToMavenLocal` - Publish to local Maven repository
+
+## Module Structure
+
+Each module follows standard Gradle layout:
+```
+module-name/
+├── src/
+│   ├── main/
+│   │   ├── groovy/    # Groovy source files
+│   │   ├── java/      # Java source files
+│   │   └── resources/ # Resource files
+│   └── test/
+│       ├── groovy/    # Test files
+│       └── resources/ # Test resources
+└── build.gradle       # Module-specific build config
+```
+
+## Custom Tasks
+
+- Packaging tasks defined in [packing.gradle](mdc:packing.gradle)
+- Code quality checks via CodeNarc: [config/codenarc/](mdc:config/codenarc/)
+
+## Development Scripts
+
+- [compile.sh](mdc:compile.sh) - Quick compile script
+- [launch.sh](mdc:launch.sh) - Launch Nextflow locally
+- [console.sh](mdc:console.sh) - Start Groovy console with Nextflow classpath
+- [test-ci.sh](mdc:test-ci.sh) - CI testing script

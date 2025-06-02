@@ -1,0 +1,78 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Testing
+
+## Test Structure
+
+### Unit Tests
+- Location: `src/test/groovy/` in each module
+- Framework: Spock (Groovy testing framework)
+- Base test class: [modules/nf-commons/src/testFixtures/groovy/test/BaseSpec.groovy](mdc:modules/nf-commons/src/testFixtures/groovy/test/BaseSpec.groovy)
+
+### Integration Tests
+- Location: [tests/](mdc:tests/) directory
+- Runner: [tests/run.sh](mdc:tests/run.sh)
+- Test scripts: `tests/checks/*.nf`
+
+### End-to-End Tests
+- Location: [test-e2e/](mdc:test-e2e/) directory
+- Full workflow execution tests
+
+## Writing Tests
+
+### Unit Test Example
+```groovy
+class MyComponentTest extends BaseSpec {
+    def 'should test feature X'() {
+        given:
+        def component = new MyComponent()
+
+        when:
+        def result = component.doSomething()
+
+        then:
+        result == expectedValue
+    }
+}
+```
+
+### Common Test Patterns
+
+1. **Mock file system** - Use `TestHelper.createInMemTempDir()`
+2. **Test fixtures** - Reusable test data in `src/testFixtures/`
+3. **Resource files** - Test resources in `src/test/resources/`
+
+## Test Utilities
+
+- Test helper: [modules/nf-commons/src/testFixtures/groovy/test/TestHelper.groovy](mdc:modules/nf-commons/src/testFixtures/groovy/test/TestHelper.groovy)
+- Mock classes: [modules/nf-commons/src/testFixtures/groovy/test/MockScriptRunner.groovy](mdc:modules/nf-commons/src/testFixtures/groovy/test/MockScriptRunner.groovy)
+
+## Running Tests
+
+### Gradle Commands
+- `./gradlew test` - Run all unit tests
+- `./gradlew :nextflow:test` - Run tests for specific module
+- `./gradlew test --tests TestClassName` - Run specific test class
+- `./gradlew test -Dtest.single=TestClassName` - Alternative syntax
+
+### Integration Tests
+```bash
+cd tests
+./run.sh checks/hello.nf    # Run specific test
+./run.sh                     # Run all tests
+```
+
+## Test Data
+
+- Sample data: [tests/data/](mdc:tests/data/)
+- BLAST database: [tests/blast-db/](mdc:tests/blast-db/)
+- Templates: [tests/templates/](mdc:tests/templates/)
+
+## CI Testing
+
+- CI script: [test-ci.sh](mdc:test-ci.sh)
+- Runs both unit and integration tests
+- Validates documentation and code quality

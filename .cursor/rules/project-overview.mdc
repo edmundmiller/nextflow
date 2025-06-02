@@ -1,0 +1,51 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Project Overview
+
+Nextflow is a workflow management system and domain-specific language (DSL) that enables scalable and reproducible scientific workflows using software containers.
+
+## Project Structure
+
+### Core Modules
+
+- **nextflow** - Main module containing the core workflow engine
+  - Entry point: [modules/nextflow/src/main/groovy/nextflow/cli/Launcher.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/cli/Launcher.groovy)
+  - Configuration: [modules/nextflow/src/main/groovy/nextflow/config/](mdc:modules/nextflow/src/main/groovy/nextflow/config/)
+  - Executors: [modules/nextflow/src/main/groovy/nextflow/executor/](mdc:modules/nextflow/src/main/groovy/nextflow/executor/)
+  - Script parsing: [modules/nextflow/src/main/groovy/nextflow/script/](mdc:modules/nextflow/src/main/groovy/nextflow/script/)
+
+- **nf-commons** - Common utilities and shared components
+  - File operations: [modules/nf-commons/src/main/nextflow/file/](mdc:modules/nf-commons/src/main/nextflow/file/)
+  - I/O utilities: [modules/nf-commons/src/main/nextflow/io/](mdc:modules/nf-commons/src/main/nextflow/io/)
+
+- **nf-lang** - Language parsing and AST components
+  - ANTLR grammar: [modules/nf-lang/src/main/antlr/](mdc:modules/nf-lang/src/main/antlr/)
+
+### Plugins
+
+Plugins extend Nextflow functionality for specific platforms:
+
+- **nf-amazon** - AWS integration (S3, Batch, EC2)
+- **nf-azure** - Azure integration (Blob Storage, Batch)
+- **nf-google** - Google Cloud integration (Cloud Storage, Life Sciences)
+- **nf-k8s** - Kubernetes executor support
+- **nf-tower** - Nextflow Tower/Platform integration
+- **nf-wave** - Wave containers integration
+
+## Key Concepts
+
+1. **Processes** - Basic execution units that run scripts/commands
+2. **Channels** - Asynchronous FIFO queues connecting processes
+3. **Operators** - Transform and manipulate channel contents
+4. **Workflows** - Compose processes into larger pipelines
+5. **Executors** - Run processes on different compute environments
+
+## Development Patterns
+
+- Groovy-based implementation with Java interop
+- Plugin architecture for extensibility
+- Extensive use of GPars for parallelism
+- Configuration via Groovy ConfigSlurper

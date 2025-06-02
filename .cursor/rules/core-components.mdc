@@ -1,0 +1,47 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Nextflow Core Components
+
+## Script Processing
+
+### Parser & AST
+- Script parser: [modules/nextflow/src/main/groovy/nextflow/script/ScriptParser.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/script/ScriptParser.groovy)
+- AST transformations: [modules/nextflow/src/main/groovy/nextflow/ast/](mdc:modules/nextflow/src/main/groovy/nextflow/ast/)
+- Process definition: [modules/nextflow/src/main/groovy/nextflow/script/ProcessDef.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/script/ProcessDef.groovy)
+
+### Execution Engine
+- Task processor: [modules/nextflow/src/main/groovy/nextflow/processor/TaskProcessor.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/processor/TaskProcessor.groovy)
+- Task runner: [modules/nextflow/src/main/groovy/nextflow/processor/TaskRun.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/processor/TaskRun.groovy)
+- Process factory: [modules/nextflow/src/main/groovy/nextflow/processor/ProcessFactory.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/processor/ProcessFactory.groovy)
+
+## Data Flow
+
+### Channels
+- Channel factory: [modules/nextflow/src/main/groovy/nextflow/Channel.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/Channel.groovy)
+- DataFlow extensions: [modules/nextflow/src/main/groovy/nextflow/extension/DataflowExtensions.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/extension/DataflowExtensions.groovy)
+- Operators: [modules/nextflow/src/main/groovy/nextflow/extension/OperatorEx.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/extension/OperatorEx.groovy)
+
+## Configuration System
+
+- Config parser: [modules/nextflow/src/main/groovy/nextflow/config/ConfigParser.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/config/ConfigParser.groovy)
+- Config builder: [modules/nextflow/src/main/groovy/nextflow/config/ConfigBuilder.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/config/ConfigBuilder.groovy)
+- Scopes: [modules/nextflow/src/main/groovy/nextflow/config/Scope.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/config/Scope.groovy)
+
+## Session Management
+
+- Session: [modules/nextflow/src/main/groovy/nextflow/Session.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/Session.groovy)
+- Global: [modules/nextflow/src/main/groovy/nextflow/Global.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/Global.groovy)
+
+## File Handling
+
+- File helper: [modules/nf-commons/src/main/nextflow/file/FileHelper.groovy](mdc:modules/nf-commons/src/main/nextflow/file/FileHelper.groovy)
+- Path extensions: [modules/nf-commons/src/main/nextflow/extension/FilesEx.groovy](mdc:modules/nf-commons/src/main/nextflow/extension/FilesEx.groovy)
+
+## Container Support
+
+- Container config: [modules/nextflow/src/main/groovy/nextflow/container/ContainerConfig.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/container/ContainerConfig.groovy)
+- Docker builder: [modules/nextflow/src/main/groovy/nextflow/container/DockerBuilder.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/container/DockerBuilder.groovy)
+- Singularity builder: [modules/nextflow/src/main/groovy/nextflow/container/SingularityBuilder.groovy](mdc:modules/nextflow/src/main/groovy/nextflow/container/SingularityBuilder.groovy)
