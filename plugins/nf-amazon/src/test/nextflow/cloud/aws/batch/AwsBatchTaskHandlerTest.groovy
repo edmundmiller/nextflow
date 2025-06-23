@@ -1159,4 +1159,160 @@ class AwsBatchTaskHandlerTest extends Specification {
         1           | true  | true       | 1
         2           | true  | true       | 2
     }
+
+    @Unroll
+    def 'should sanitize AWS Batch label' () {
+        given:
+        def handler = Spy(AwsBatchTaskHandler)
+
+        expect:
+        handler.sanitizeAwsBatchLabel(INPUT, MAX_LENGTH) == EXPECTED
+
+        where:
+        INPUT                               | MAX_LENGTH | EXPECTED
+        // Valid labels that don't need sanitization
+        'validLabel'                        | 50         | 'validLabel'
+        'valid-label_123'                   | 50         | 'valid-label_123'
+        'valid.label:test/path=value+more'  | 50         | 'valid.label:test/path=value+more'
+        'label with spaces'                 | 50         | 'label with spaces'
+        'label-with@symbol'                 | 50         | 'label-with@symbol'
+        and:
+        // Labels with invalid characters
+        'label#with#hash'                   | 50         | 'label_with_hash'
+        'label$with%special&chars'          | 50         | 'label_with_special_chars'
+        'label(with)brackets[and]braces{}'  | 50         | 'label_with_brackets_and_braces__'
+        'label*with?wildcards'              | 50         | 'label_with_wildcards'
+        'unicode_λαβελ_test'                | 50         | 'unicode____abel_test'
+        and:
+        // Multiple consecutive invalid characters
+        'label###multiple###hashes'         | 50         | 'label_multiple_hashes'
+        'label   multiple   spaces'         | 50         | 'label_multiple_spaces'
+        'label___multiple___underscores'    | 50         | 'label_multiple_underscores'
+        'label$%^&*special*&^%$chars'       | 50         | 'label_special_chars'
+        and:
+        // Leading/trailing invalid characters
+        '###leading-hashes'                 | 50         | 'leading-hashes'
+        'trailing-hashes###'                | 50         | 'trailing-hashes'
+        '   leading-spaces'                 | 50         | 'leading-spaces'
+        'trailing-spaces   '                | 50         | 'trailing-spaces'
+        '___leading-underscores'            | 50         | 'leading-underscores'
+        'trailing-underscores___'           | 50         | 'trailing-underscores'
+        and:
+        // Length truncation
+        'very-long-label-that-exceeds-max'  | 10         | 'very-long-'
+        'very-long-label-ending-with-_'     | 25         | 'very-long-label-ending-w'
+        'very-long-label-ending-with-___'   | 28         | 'very-long-label-ending-w'
+        and:
+        // Edge cases
+        null                                | 50         | null
+        ''                                  | 50         | ''
+        '   '                               | 50         | null
+        '___'                               | 50         | null
+        '###'                               | 50         | null
+        '_'                                 | 50         | null
+        ' '                                 | 50         | null
+        '#'                                 | 50         | null
+        and:
+        // Complex real-world scenarios
+        'user@domain.com'                   | 50         | 'user@domain.com'
+        'workflow-run-2024/01/15'           | 50         | 'workflow-run-2024/01/15'
+        'task.hash.0x1234abcd'              | 50         | 'task.hash.0x1234abcd'
+        'pipeline#name%with&special*chars'  | 50         | 'pipeline_name_with_special_chars'
+        'session-id:abc123#$%'              | 50         | 'session-id:abc123'
+    }
+
+    @Unroll
+    def 'should sanitize AWS Batch labels map' () {
+        given:
+        def handler = Spy(AwsBatchTaskHandler)
+
+        expect:
+        handler.sanitizeAwsBatchLabels(INPUT) == EXPECTED
+
+        where:
+        INPUT | EXPECTED
+        // Null/empty input
+        null | null
+        [:] | [:]
+        and:
+        // Valid labels
+        [validKey: 'validValue'] | [validKey: 'validValue']
+        ['valid-key_123': 'valid-value_456'] | ['valid-key_123': 'valid-value_456']
+        ['key.with:path/chars=test+more@symbol': 'value with spaces'] | ['key.with:path/chars=test+more@symbol': 'value with spaces']
+        and:
+        // Invalid characters in keys and values
+        ['key#with#hash': 'value$with%special&chars'] | ['key_with_hash': 'value_with_special_chars']
+        ['key(brackets)': 'value[squares]{braces}'] | ['key_brackets_': 'value_squares__braces_']
+        ['unicode_λkey': 'unicode_λvalue'] | ['unicode__key': 'unicode__value']
+        and:
+        // Multiple entries with mixed validity
+        ['validKey': 'validValue', 'invalid#key': 'invalid$value', 'another.valid:key': 'another+valid@value'] | 
+        ['validKey': 'validValue', 'invalid_key': 'invalid_value', 'another.valid:key': 'another+valid@value']
+        and:
+        // Entries that should be filtered out (null/empty after sanitization)
+        ['validKey': 'validValue', '###': '$$$', '   ': '%%%', 'goodKey': 'goodValue'] |
+        ['validKey': 'validValue', 'goodKey': 'goodValue']
+        and:
+        // Null keys or values
+        ['validKey': null, null: 'validValue', 'goodKey': 'goodValue'] |
+        ['goodKey': 'goodValue']
+        and:
+        // Real-world example with Nextflow resource labels
+        [
+            'uniqueRunId': 'tw-12345-workflow-run',
+            'taskHash': 'task.hash.0x1a2b3c4d#special',
+            'pipelineUser': 'user@domain.com',
+            'pipelineRunName': 'my-pipeline-run(2024)',
+            'pipelineSessionId': 'session#id$with%special&chars',
+            'pipelineResume': 'false',
+            'pipelineName': 'my_pipeline/name:version+tag'
+        ] |
+        [
+            'uniqueRunId': 'tw-12345-workflow-run',
+            'taskHash': 'task.hash.0x1a2b3c4d_special',
+            'pipelineUser': 'user@domain.com',
+            'pipelineRunName': 'my-pipeline-run_2024_',
+            'pipelineSessionId': 'session_id_with_special_chars',
+            'pipelineResume': 'false',
+            'pipelineName': 'my_pipeline/name:version+tag'
+        ]
+    }
+
+    def 'should apply label sanitization in submit request' () {
+        given:
+        def task = Mock(TaskRun)
+        task.getName() >> 'batch-task'
+        task.getConfig() >> new TaskConfig(
+            memory: '8GB', 
+            cpus: 4, 
+            resourceLabels: [
+                'validLabel': 'validValue',
+                'invalid#key': 'invalid$value',
+                'long-key-that-might-be-truncated-if-very-very-long': 'long-value-that-should-be-truncated-because-it-exceeds-the-maximum-allowed-length-for-aws-batch-tags-which-is-256-characters-and-this-string-is-definitely-longer-than-that-limit-so-it-will-be-cut-off-at-the-appropriate-length-and-cleaned-up'
+            ]
+        )
+
+        def handler = Spy(AwsBatchTaskHandler)
+
+        when:
+        def req = handler.newSubmitRequest(task)
+        then:
+        1 * handler.getSubmitCommand() >> ['bash', '-c', 'test']
+        1 * handler.maxSpotAttempts() >> 0
+        1 * handler.getAwsOptions() >> new AwsOptions()
+        1 * handler.getJobQueue(task) >> 'test-queue'
+        1 * handler.getJobDefinition(task) >> 'test-job-def'
+        1 * handler.getEnvironmentVars() >> []
+
+        and:
+        def tags = req.getTags()
+        tags.size() == 3
+        tags['validLabel'] == 'validValue'
+        tags['invalid_key'] == 'invalid_value'
+        // Check that long value was truncated
+        tags['long-key-that-might-be-truncated-if-very-very-long'].length() <= 256
+        tags['long-key-that-might-be-truncated-if-very-very-long'].startsWith('long-value-that-should-be-truncated')
+        !tags['long-key-that-might-be-truncated-if-very-very-long'].endsWith('_')
+        req.getPropagateTags() == true
+    }
 }
