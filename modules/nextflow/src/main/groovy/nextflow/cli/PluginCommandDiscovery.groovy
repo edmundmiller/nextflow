@@ -183,12 +183,35 @@ class PluginCommandDiscovery {
             
             // Start all plugins so their extensions become available
             // This is critical because PF4J only makes extensions discoverable after plugins are started
+            final startedPlugins = [] as List<String>
+            final failedPlugins = [] as List<Map<String,String>>
+            
             allPlugins.each { pluginWrapper ->
                 log.debug("Plugin ${pluginWrapper.pluginId} state: ${pluginWrapper.pluginState}")
                 if (pluginWrapper.pluginState != org.pf4j.PluginState.STARTED) {
                     log.debug("Starting plugin: ${pluginWrapper.pluginId}")
-                    Plugins.manager.startPlugin(pluginWrapper.pluginId)
+                    try {
+                        Plugins.manager.startPlugin(pluginWrapper.pluginId)
+                        startedPlugins.add(pluginWrapper.pluginId)
+                        log.debug("Successfully started plugin: ${pluginWrapper.pluginId}")
+                    }
+                    catch (Throwable e) {
+                        failedPlugins.add([id: pluginWrapper.pluginId, error: e.message])
+                        log.warn("Failed to start plugin '${pluginWrapper.pluginId}': ${e.message}")
+                        log.debug("Plugin startup error details", e)
+                    }
+                } else {
+                    // Plugin was already started
+                    startedPlugins.add(pluginWrapper.pluginId)
                 }
+            }
+            
+            // Report startup results
+            if (startedPlugins) {
+                log.debug("Successfully started ${startedPlugins.size()} plugins: ${startedPlugins.join(', ')}")
+            }
+            if (failedPlugins) {
+                log.warn("Failed to start ${failedPlugins.size()} plugins: ${failedPlugins.collect { "${it.id} (${it.error})" }.join(', ')}")
             }
         }
         catch (Exception e) {
