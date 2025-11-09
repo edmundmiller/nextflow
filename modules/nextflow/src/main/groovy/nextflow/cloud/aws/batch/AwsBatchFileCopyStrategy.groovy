@@ -72,6 +72,15 @@ class AwsBatchFileCopyStrategy extends SimpleFileCopyStrategy {
             result << "chmod +x \$PWD/nextflow-bin/*\n"
             result << "export PATH=\$PWD/nextflow-bin:\$PATH\n"
         }
+        // download and stage module bin directories
+        if( opts.remoteModuleBinDirs ) {
+            opts.remoteModuleBinDirs.each { moduleName, remotePath ->
+                result << "mkdir -p \$PWD/nextflow-modules/${moduleName}\n"
+                result << "${opts.getAwsCli()} s3 cp --recursive --only-show-errors s3:/${remotePath} \$PWD/nextflow-modules/${moduleName}/bin\n"
+                result << "chmod +x \$PWD/nextflow-modules/${moduleName}/bin/* 2>/dev/null || true\n"
+                result << "export PATH=\$PWD/nextflow-modules/${moduleName}/bin:\$PATH\n"
+            }
+        }
         // finally render the environment
         final envSnippet = super.getEnvScript(copy,false)
         if( envSnippet )

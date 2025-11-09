@@ -551,4 +551,50 @@ class SessionTest extends Specification {
         0 * session.showVersionError(_)
 
     }
+
+    def 'test module bin directory tracking'() {
+
+        setup:
+        def session = new Session()
+        def tempDir = Files.createTempDirectory('test')
+        def moduleBinDir = tempDir.resolve('module1/bin')
+        moduleBinDir.mkdirs()
+
+        // Create an executable file in the module bin directory
+        def scriptFile = moduleBinDir.resolve('myscript.sh')
+        scriptFile.text = '#!/bin/bash\necho "hello"'
+        Files.setPosixFilePermissions(scriptFile, [
+            PosixFilePermission.OWNER_READ,
+            PosixFilePermission.OWNER_WRITE,
+            PosixFilePermission.OWNER_EXECUTE
+        ] as Set)
+
+        when:
+        session.registerModuleBinDir('module1', moduleBinDir)
+
+        then:
+        session.moduleBinDirs.size() == 1
+        session.moduleBinDirs['module1'] == moduleBinDir
+
+        when:
+        def emptyBinDir = tempDir.resolve('module2/bin')
+        emptyBinDir.mkdirs()
+        session.registerModuleBinDir('module2', emptyBinDir)
+
+        then:
+        // Empty bin dir should not be registered
+        session.moduleBinDirs.size() == 1
+
+        when:
+        def nonExistentBinDir = tempDir.resolve('module3/bin')
+        session.registerModuleBinDir('module3', nonExistentBinDir)
+
+        then:
+        // Non-existent bin dir should not be registered
+        session.moduleBinDirs.size() == 1
+
+        cleanup:
+        tempDir.deleteDir()
+
+    }
 }

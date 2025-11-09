@@ -354,5 +354,43 @@ class AwsBatchFileCopyStrategyTest extends Specification {
         script == "downloads+=(\"nxf_s3_download s3:/$file bar.txt\")" as String
 
     }
-    
+
+    def 'should stage module bin directories' () {
+
+        given:
+        def ENV = [FOO: 'hola', BAR:'world']
+        def bean = Mock(TaskBean)
+        def opts = Mock(AwsOptions)
+        def copy = Spy(AwsBatchFileCopyStrategy, constructorArgs: [bean, opts])
+
+        when:
+        def script = copy.getEnvScript(ENV,false)
+        then:
+        opts.getRemoteBinDir() >> null
+        opts.getRemoteModuleBinDirs() >> [
+            'module1': '/bucket/modules/module1/bin',
+            'module2': '/bucket/modules/module2/bin'
+        ]
+        opts.getAwsCli() >> 'aws'
+        script.contains('mkdir -p $PWD/nextflow-modules/module1')
+        script.contains('aws s3 cp --recursive --only-show-errors s3://bucket/modules/module1/bin $PWD/nextflow-modules/module1/bin')
+        script.contains('chmod +x $PWD/nextflow-modules/module1/bin/* 2>/dev/null || true')
+        script.contains('export PATH=$PWD/nextflow-modules/module1/bin:$PATH')
+        script.contains('mkdir -p $PWD/nextflow-modules/module2')
+        script.contains('aws s3 cp --recursive --only-show-errors s3://bucket/modules/module2/bin $PWD/nextflow-modules/module2/bin')
+        script.contains('chmod +x $PWD/nextflow-modules/module2/bin/* 2>/dev/null || true')
+        script.contains('export PATH=$PWD/nextflow-modules/module2/bin:$PATH')
+
+        when:
+        script = copy.getEnvScript(ENV,false)
+        then:
+        // Test with both remote bin dir and module bin dirs
+        opts.getRemoteBinDir() >> '/foo/bar'
+        opts.getRemoteModuleBinDirs() >> ['module1': '/bucket/modules/module1/bin']
+        opts.getAwsCli() >> 'aws'
+        script.contains('aws s3 cp --recursive --only-show-errors s3://foo/bar $PWD/nextflow-bin')
+        script.contains('aws s3 cp --recursive --only-show-errors s3://bucket/modules/module1/bin $PWD/nextflow-modules/module1/bin')
+
+    }
+
 }

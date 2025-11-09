@@ -170,6 +170,11 @@ class Session implements ISession {
     private Map<String,Path> binEntries = [:]
 
     /**
+     * Map of module names to their bin directories
+     */
+    private Map<String,Path> moduleBinDirs = [:]
+
+    /**
      * The unique identifier of this session
      */
     private UUID uniqueId
@@ -512,6 +517,18 @@ class Session implements ISession {
     Path getBinDir() { binDir }
 
     Map<String,Path> getBinEntries() { binEntries ?: Collections.<String,Path>emptyMap() }
+
+    Map<String,Path> getModuleBinDirs() { moduleBinDirs ?: Collections.<String,Path>emptyMap() }
+
+    void registerModuleBinDir(String moduleName, Path binDir) {
+        if( binDir?.exists() && binDir.isDirectory() ) {
+            def entries = findBinEntries(binDir)
+            if( entries ) {
+                log.debug "Registering module bin directory: $moduleName -> $binDir"
+                moduleBinDirs.put(moduleName, binDir)
+            }
+        }
+    }
 
     void setBaseDir( Path baseDir ) {
         this.baseDir = baseDir

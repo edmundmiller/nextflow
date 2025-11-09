@@ -72,6 +72,11 @@ class AwsBatchExecutor extends Executor {
      */
     private Path remoteBinDir = null
 
+    /**
+     * Map of module names to their S3 paths for module bin directories
+     */
+    private Map<String,Path> remoteModuleBinDirs = null
+
     private AwsOptions awsOptions
 
     AwsOptions getAwsOptions() {  awsOptions  }
@@ -114,6 +119,19 @@ class AwsBatchExecutor extends Executor {
             def s3 = getTempDir()
             log.info "Uploading local `bin` scripts folder to ${s3.toUriString()}/bin"
             remoteBinDir = FilesEx.copyTo(session.binDir, s3)
+        }
+
+        /*
+         * upload module binaries
+         */
+        if( session.moduleBinDirs && !disableBinDir ) {
+            def s3 = getTempDir()
+            remoteModuleBinDirs = new HashMap<>(session.moduleBinDirs.size())
+            session.moduleBinDirs.each { moduleName, binDir ->
+                log.info "Uploading module `$moduleName/bin` scripts folder to ${s3.toUriString()}/modules/$moduleName/bin"
+                def remotePath = FilesEx.copyTo(binDir, s3.resolve("modules/$moduleName"))
+                remoteModuleBinDirs.put(moduleName, remotePath)
+            }
         }
     }
 
@@ -161,6 +179,11 @@ class AwsBatchExecutor extends Executor {
     @PackageScope
     Path getRemoteBinDir() {
         remoteBinDir
+    }
+
+    @PackageScope
+    Map<String,Path> getRemoteModuleBinDirs() {
+        remoteModuleBinDirs ?: Collections.<String,Path>emptyMap()
     }
 
     @PackageScope

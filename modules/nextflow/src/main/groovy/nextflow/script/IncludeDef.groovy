@@ -128,11 +128,21 @@ class IncludeDef {
         final binding = new ScriptBinding() .setParams(params)
 
         // the execution of a library file has as side effect the registration of declared processes
-        new ScriptParser(session)
+        final script = new ScriptParser(session)
                 .setModule(true)
                 .setBinding(binding)
                 .runScript(path)
                 .getScript()
+
+        // Check for module bin directory and register it with the session
+        final moduleDir = path.parent
+        final moduleBinDir = moduleDir.resolve('bin')
+        if( moduleBinDir.exists() && moduleBinDir.isDirectory() ) {
+            final moduleName = moduleDir.name
+            session.registerModuleBinDir(moduleName, moduleBinDir)
+        }
+
+        return script
     }
 
     @PackageScope

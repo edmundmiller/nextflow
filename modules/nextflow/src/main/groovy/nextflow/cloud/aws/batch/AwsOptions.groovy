@@ -49,6 +49,8 @@ class AwsOptions {
 
     String remoteBinDir
 
+    Map<String,String> remoteModuleBinDirs
+
     String region
 
     int maxParallelTransfers = MAX_TRANSFER
@@ -71,12 +73,15 @@ class AwsOptions {
 
     List<String> getVolumes() { volumes != null ? Collections.unmodifiableList(volumes) : Collections.<String>emptyList() }
 
+    Map<String,String> getRemoteModuleBinDirs() { remoteModuleBinDirs ?: Collections.<String,String>emptyMap() }
+
     /* Only for testing purpose */
     protected AwsOptions() { }
 
     AwsOptions( AwsBatchExecutor executor ) {
         this(executor.session)
         this.remoteBinDir = executor.getRemoteBinDir()
+        this.remoteModuleBinDirs = executor.getRemoteModuleBinDirs()
     }
 
     AwsOptions(Session session) {

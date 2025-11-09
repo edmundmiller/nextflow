@@ -163,5 +163,46 @@ class IncludeDefTest extends Specification {
 
     }
 
+    def 'should register module bin directory when loading module' () {
+
+        given:
+        def folder = TestHelper.createInMemTempDir()
+        def moduleDir = folder.resolve('mymodule')
+        moduleDir.mkdirs()
+
+        // Create a module script
+        def moduleScript = moduleDir.resolve('main.nf')
+        moduleScript.text = '''
+            process FOO {
+                output:
+                stdout
+
+                script:
+                """
+                echo hello
+                """
+            }
+        '''
+
+        // Create a bin directory with an executable script
+        def binDir = moduleDir.resolve('bin')
+        binDir.mkdirs()
+        def execScript = binDir.resolve('myscript.sh')
+        execScript.text = '#!/bin/bash\necho "hello from module bin"'
+        execScript.toFile().setExecutable(true)
+
+        and:
+        def session = Mock(nextflow.Session)
+        def params = [:] as ScriptBinding.ParamsMap
+
+        when:
+        def script = IncludeDef.loadModule0(moduleScript, params, session)
+
+        then:
+        1 * session.registerModuleBinDir('mymodule', binDir)
+        script != null
+
+    }
+
 
 }
