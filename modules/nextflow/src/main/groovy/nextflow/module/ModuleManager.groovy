@@ -145,11 +145,15 @@ class ModuleManager {
 
     private Path modulesRoot
     private Path configFile
+    private Path projectRoot
     private Map<String, InstalledModule> installedModules = [:]
+    private ModuleLockfile lockfile
 
-    ModuleManager(Path projectRoot = Paths.get(System.getProperty('user.dir'))) {
+    ModuleManager(Path projectRoot = Paths.get(System.getProperty('user.dir')), boolean useLockfile = true) {
+        this.projectRoot = projectRoot
         this.modulesRoot = projectRoot.resolve('modules')
         this.configFile = projectRoot.resolve('modules.json')
+        this.lockfile = useLockfile ? new ModuleLockfile(projectRoot) : null
         loadConfig()
     }
 
@@ -256,6 +260,17 @@ class ModuleManager {
             installedModules[moduleRef.moduleName] = installed
             saveConfig()
 
+            // Add to lockfile if enabled
+            if (lockfile != null) {
+                lockfile.addEntry(
+                    moduleRef.moduleName,
+                    "${moduleRef.provider}:${moduleRef.project}",
+                    moduleRef.path,
+                    moduleRef.revision,
+                    installPath
+                )
+            }
+
             log.info "Successfully installed module ${moduleRef.moduleName} to ${installPath}"
             return installed
 
@@ -320,6 +335,11 @@ class ModuleManager {
         installedModules.remove(moduleName)
         saveConfig()
 
+        // Remove from lockfile if enabled
+        if (lockfile != null) {
+            lockfile.removeEntry(moduleName)
+        }
+
         log.info "Successfully removed module ${moduleName}"
     }
 
@@ -361,3 +381,27 @@ class ModuleManager {
         return installedModules.containsKey(moduleName)
     }
 }
+
+    /**
+     * Verify integrity of an installed module
+     */
+    boolean verifyIntegrity(String moduleName) {
+        if (lockfile == null) {
+            log.warn "Lockfile not enabled, cannot verify integrity"
+            return false
+        }
+
+        def module = installedModules[moduleName]
+        if (!module) {
+            throw new AbortOperationException("Module not found: ${moduleName}")
+        }
+
+        return lockfile.verifyIntegrity(moduleName, module.installedPath)
+    }
+
+    /**
+     * Get lockfile instance
+     */
+    ModuleLockfile getLockfile() {
+        return lockfile
+    }

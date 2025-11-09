@@ -2,16 +2,78 @@
 
 ## Overview
 
-The `nextflow modules` command provides a robust CLI interface for managing remote Nextflow modules. This feature addresses issue #4112 by implementing a middle-ground approach similar to `nf-core modules`, allowing manual module imports while maintaining explicit dependency tracking.
+The `nextflow modules` command provides comprehensive module management with **three** approaches to fit different workflows:
+
+1. **CLI Commands** - Manual, explicit installation (like nf-core modules)
+2. **@GrabModule Annotation** - Automatic resolution with security (like Go/Deno/Groovy)
+3. **Direct Include** - Local files only (existing behavior)
+
+This addresses issue #4112 with a security-first design inspired by modern package managers.
+
+## Quick Start
+
+### Approach 1: Automatic with @GrabModule (Recommended)
+
+```groovy
+nextflow.enable.dsl=2
+
+@GrabModule('nf-core/modules/modules/nf-core/fastqc@abc123')
+include { FASTQC } from 'nf-core/modules/modules/nf-core/fastqc'
+
+workflow {
+    FASTQC(Channel.fromPath(params.reads))
+}
+```
+
+**What happens:**
+- First run: Downloads module, calculates SHA-256 hash, saves to modules.lock
+- Subsequent runs: Verifies hash matches modules.lock (prevents tampering)
+- Security: Cryptographic integrity verification (like Go modules, Deno)
+
+### Approach 2: Manual CLI Installation
+
+```bash
+nextflow modules install nf-core/modules/modules/nf-core/fastqc@abc123
+```
+
+Then use in workflow:
+```groovy
+include { FASTQC } from './modules/nf-core/modules/modules/nf-core/fastqc/main.nf'
+```
+
+### Approach 3: Local Only (Current Behavior)
+
+```groovy
+include { FASTQC } from './local/modules/fastqc/main.nf'
+```
+
+## Security Model
+
+See [Module Security Model](modules-security-model.md) for comprehensive security documentation.
+
+**Key Points:**
+- ✅ **Cryptographic integrity** - SHA-256 hashes prevent tampering
+- ✅ **Reproducible builds** - modules.lock ensures same code everywhere
+- ✅ **Three security modes** - strict (default), warn, permissive
+- ✅ **Inspired by Go, Deno, npm** - Industry-proven approaches
+
+### How Security Works
+
+```
+1. Install/Download → Calculate SHA-256 → Save to modules.lock
+2. Next run → Verify SHA-256 → Pass/Fail based on security mode
+3. Any modification → Hash mismatch → Detected
+```
 
 ## Design Philosophy
 
-This implementation deliberately avoids automatic remote module resolution during runtime (which was rejected in the original issue discussion) and instead provides a CLI-based module management system that:
+This implementation provides **secure automatic dependency resolution** that:
 
-1. Downloads and caches modules locally before execution
-2. Maintains explicit module dependency tracking via `modules.json`
+1. Downloads and caches modules with cryptographic verification
+2. Maintains explicit dependency tracking via `modules.json` and `modules.lock`
 3. Enables offline usage after initial installation
-4. Works seamlessly with the existing `include` statement system
+4. Works seamlessly with existing `include` statements
+5. Prevents tampering through SHA-256 integrity checks
 
 ## Architecture
 
