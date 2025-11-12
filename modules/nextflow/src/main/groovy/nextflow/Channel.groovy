@@ -36,6 +36,7 @@ import groovyx.gpars.dataflow.DataflowWriteChannel
 import groovyx.gpars.dataflow.operator.ControlMessage
 import groovyx.gpars.dataflow.operator.PoisonPill
 import nextflow.dag.NodeMarker
+import nextflow.datasource.DatasetExplorer
 import nextflow.datasource.SraExplorer
 import nextflow.exception.AbortOperationException
 import nextflow.extension.CH
@@ -606,6 +607,54 @@ class Channel  {
     static private void fetchSraFiles0(SraExplorer explorer) {
         def future = CompletableFuture.runAsync ({ explorer.apply() } as Runnable)
         fromPath0Future = future.exceptionally(Channel.&handlerException)
+    }
+
+    /**
+     * Download a dataset from Seqera Platform and return its content as a String
+     *
+     * @param datasetId The dataset identifier
+     * @return A String containing the dataset content
+     */
+    static String fromDataset(String datasetId) {
+        fromDataset(Collections.emptyMap(), datasetId)
+    }
+
+    /**
+     * Download a dataset from Seqera Platform and return its content as a String
+     *
+     * @param opts Optional parameters (endpoint, version, fileName)
+     * @param datasetId The dataset identifier
+     * @return A String containing the dataset content
+     *
+     * @example
+     * <pre>
+     * // Basic usage - requires fileName parameter
+     * def csv = Channel.fromDataset([fileName: 'data.csv'], 'ds.123abc')
+     *
+     * // Specify version and endpoint
+     * def csv = Channel.fromDataset([
+     *     fileName: 'data.csv',
+     *     version: '2',
+     *     endpoint: 'https://api.tower.nf'
+     * ], 'ds.123abc')
+     *
+     * // Use with nf-schema for samplesheet parsing
+     * ch_input = Channel.fromList(
+     *     samplesheetToList(
+     *         fromDataset([fileName: 'samplesheet.csv'], params.input),
+     *         "assets/schema_input.json"
+     *     )
+     * )
+     * </pre>
+     *
+     * TODO: Support querying multiple datasets using list-datasets API
+     * TODO: Support automatic version detection/latest version
+     */
+    static String fromDataset(Map opts, String datasetId) {
+        CheckHelper.checkParams('fromDataset', opts, DatasetExplorer.PARAMS)
+
+        def explorer = new DatasetExplorer(datasetId, opts)
+        return explorer.apply()
     }
 
 }
