@@ -25,9 +25,9 @@ import nextflow.Global
 import nextflow.Session
 import nextflow.script.BaseScript
 import nextflow.script.ChannelOut
-import nextflow.script.IncludeDef
 import nextflow.script.ProcessDef
 import nextflow.script.ScriptBinding
+import nextflow.script.ScriptFile
 import nextflow.script.parser.v1.ScriptLoaderV1
 import nextflow.script.ScriptMeta
 
@@ -37,7 +37,6 @@ import nextflow.script.ScriptMeta
  * @author Edmund Miller
  */
 @Slf4j
-@CompileStatic
 class ProcessTest implements Test {
 
     private ProcessTestSuite parent
@@ -149,22 +148,22 @@ class ProcessTest implements Test {
      * Load and execute the target process
      */
     private void executeProcess() {
-        def session = context.session
+        Session session = context.session
 
         // Load the module containing the process
-        def scriptPath = parent.resolveScript()
+        Path scriptPath = parent.resolveScript()
         log.debug "Loading script: ${scriptPath}"
 
-        def binding = new ScriptBinding().setParams(context.params)
-        def moduleScript = new ScriptLoaderV1(session)
+        ScriptBinding binding = new ScriptBinding().setParams(context.params)
+        BaseScript moduleScript = new ScriptLoaderV1(session)
             .setModule(true)
             .setBinding(binding)
             .parse(scriptPath)
             .runScript()
 
         // Get the process definition
-        def meta = ScriptMeta.get(moduleScript)
-        def processDef = meta.getProcess(parent.processName)
+        ScriptMeta meta = ScriptMeta.get(moduleScript)
+        ProcessDef processDef = meta.getProcess(parent.processName)
 
         if (processDef == null) {
             throw new IllegalStateException("Process '${parent.processName}' not found in script: ${scriptPath}")
@@ -173,10 +172,10 @@ class ProcessTest implements Test {
         log.debug "Found process: ${processDef.name}"
 
         // Invoke the process with captured inputs
-        def inputs = context.inputContext.toArray()
+        Object[] inputs = context.inputContext.toArray()
         log.debug "Invoking process with ${inputs.length} inputs"
 
-        def output = processDef.run(inputs) as ChannelOut
+        ChannelOut output = (ChannelOut) processDef.run(inputs)
 
         // Store output in context for assertions
         context.processOutput = output
@@ -195,7 +194,6 @@ class ProcessTest implements Test {
  * Context for test execution
  */
 @Slf4j
-@CompileStatic
 class TestExecutionContext {
 
     ProcessTestSuite suite
@@ -220,7 +218,7 @@ class TestExecutionContext {
         outputDir = Files.createTempDirectory('nf-test-output')
 
         // Create session
-        def config = [
+        Map config = [
             workDir: workDir.toString()
         ]
 
@@ -230,7 +228,8 @@ class TestExecutionContext {
         }
 
         session = new Session(config)
-        session.init(suite.resolveScript().toFile())
+        ScriptFile scriptFile = new ScriptFile(suite.resolveScript().toFile())
+        session.init(scriptFile)
         session.start()
 
         // Store session globally for process access
@@ -250,7 +249,6 @@ class TestExecutionContext {
  * Context for 'when' block
  */
 @Slf4j
-@CompileStatic
 class WhenContext {
 
     private TestExecutionContext context
@@ -267,7 +265,7 @@ class WhenContext {
      * DSL method: params { }
      */
     void params(@DelegatesTo(value = Map, strategy = Closure.DELEGATE_FIRST) Closure closure) {
-        def paramsMap = context.params
+        Map paramsMap = context.params
         closure.delegate = paramsMap
         closure.resolveStrategy = Closure.DELEGATE_FIRST
         closure.call()
@@ -296,7 +294,7 @@ class WhenContext {
     private void handleLegacyMapping(String mapping) {
         // Parse the mapping string and extract input assignments
         // Format: input[0] = Channel.of(...)\n input[1] = ...
-        def shell = new GroovyShell()
+        GroovyShell shell = new GroovyShell()
         shell.setVariable('input', input)
         shell.setVariable('Channel', nextflow.Channel)
         shell.evaluate(mapping)
@@ -318,7 +316,6 @@ class WhenContext {
  * Context for 'then' block - provides assertion helpers
  */
 @Slf4j
-@CompileStatic
 class ThenContext {
 
     private TestExecutionContext context
@@ -350,7 +347,6 @@ class ThenContext {
  * Wrapper for process results in 'then' block
  */
 @Slf4j
-@CompileStatic
 class ProcessResult {
 
     private TestExecutionContext context

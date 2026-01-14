@@ -28,10 +28,6 @@ import groovyx.gpars.dataflow.DataflowReadChannel
 import groovyx.gpars.dataflow.DataflowWriteChannel
 import nextflow.Global
 import nextflow.Session
-import io.nextflow.gradle.extensions.PluginExtensionPoint
-import io.nextflow.gradle.extensions.Function
-import io.nextflow.gradle.extensions.Operator
-import io.nextflow.gradle.extensions.Factory
 import nextflow.exception.AbortOperationException
 import nextflow.extension.OpCall
 import nextflow.extension.OperatorImpl
@@ -159,7 +155,7 @@ class PluginExtensionProvider implements ExtensionProvider {
             }
         }
         // initialise the plugin session
-        ext.checkInit(Global.session as Object)
+        ext.checkInit((Session)Global.session)
         return instance = this
     }
 
@@ -280,7 +276,7 @@ class PluginExtensionProvider implements ExtensionProvider {
             throw new IllegalStateException("Missing target class for operator '$method'")
         method = operatorExtensions.get(method)?.method
         if( target.target instanceof PluginExtensionPoint )
-            ((PluginExtensionPoint)target.target).checkInit(getSession() as Object)
+            ((PluginExtensionPoint)target.target).checkInit(getSession())
         new OpCall(target.target,channel,method,args).call()
     }
 

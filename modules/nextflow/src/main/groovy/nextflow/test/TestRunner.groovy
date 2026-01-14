@@ -31,7 +31,6 @@ import groovy.util.logging.Slf4j
  * @author Edmund Miller
  */
 @Slf4j
-@CompileStatic
 class TestRunner {
 
     /** Test file pattern */
@@ -90,10 +89,10 @@ class TestRunner {
      * Discover test files in the given paths
      */
     private List<File> discoverTestFiles(List<String> paths) {
-        def testFiles = []
+        List<File> testFiles = []
 
-        for (pathStr in paths) {
-            def path = Path.of(pathStr)
+        for (String pathStr in paths) {
+            Path path = Path.of(pathStr)
 
             if (Files.isDirectory(path)) {
                 // Walk directory for .nf.test files
