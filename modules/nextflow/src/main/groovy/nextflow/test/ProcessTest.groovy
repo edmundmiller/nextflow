@@ -155,11 +155,12 @@ class ProcessTest implements Test {
         log.debug "Loading script: ${scriptPath}"
 
         ScriptBinding binding = new ScriptBinding().setParams(context.params)
-        BaseScript moduleScript = new ScriptLoaderV1(session)
+        def loader = new ScriptLoaderV1(session)
             .setModule(true)
             .setBinding(binding)
             .parse(scriptPath)
-            .runScript()
+        loader.runScript()
+        BaseScript moduleScript = loader.getScript()
 
         // Get the process definition
         ScriptMeta meta = ScriptMeta.get(moduleScript)
@@ -217,9 +218,11 @@ class TestExecutionContext {
         workDir = Files.createTempDirectory('nf-test-work')
         outputDir = Files.createTempDirectory('nf-test-output')
 
-        // Create session
+        // Create session with minimal config
+        // Disable cloud cache to use local cache factory
         Map config = [
-            workDir: workDir.toString()
+            workDir: workDir.toString(),
+            cloudcache: [enabled: false]
         ]
 
         if (suite.configFile?.exists()) {

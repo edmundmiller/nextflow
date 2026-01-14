@@ -1,0 +1,18 @@
+nextflow_process {
+
+    name "Test HELLO process"
+    script "test-data/simple/main.nf"
+    process "HELLO"
+
+    test("Should say hello") {
+        when {
+            process {
+                input["greeting"] = Channel.of("World")
+            }
+        }
+
+        then {
+            assert process.success
+        }
+    }
+}

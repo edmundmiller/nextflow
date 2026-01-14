@@ -358,6 +358,13 @@ class LoggerHelper {
      */
 
     static void configureLogger( Launcher launcher ) {
+        // Skip logback configuration if not available (e.g., classpath conflicts)
+        def factory = LoggerFactory.getILoggerFactory()
+        if( !(factory instanceof LoggerContext) ) {
+            System.err.println("WARN: Logback not available, skipping logger configuration")
+            return
+        }
+
         INSTANCE = new LoggerHelper(launcher.options)
                 .setDaemon(launcher.isDaemon())
                 .setRolling(true)
@@ -366,8 +373,9 @@ class LoggerHelper {
     }
 
     static setQuiet(boolean quiet) {
+        // Skip if logback not available (INSTANCE will be null)
         if( INSTANCE==null )
-            throw new IllegalStateException("Method 'LoggerHelper.setQuiet' must be called after the invocation of 'LoggerHelper.configureLogger'")
+            return
         INSTANCE.setQuiet0(quiet)
     }
 
@@ -375,7 +383,16 @@ class LoggerHelper {
      * Setup a minimal logger that redirect log events to stderr only used during app bootstrap
      */
     static void bootstrapLogger() {
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        def factory = LoggerFactory.getILoggerFactory()
+
+        // Handle case where logback is not available (e.g., classpath conflicts in dev)
+        if( !(factory instanceof LoggerContext) ) {
+            // Fall back to whatever logger is available - it will work but may not be configured
+            System.err.println("WARN: Logback not available, using default logger")
+            return
+        }
+
+        LoggerContext context = (LoggerContext) factory
 
         // Reset the logger context (this clears any existing loggers)
         context.reset();

@@ -39,9 +39,23 @@ abstract class CacheFactory implements ExtensionPoint {
         final all = Plugins.getPriorityExtensions(CacheFactory)
         if( !all )
             throw new IllegalStateException("Unable to find Nextflow cache factory")
-        final factory = all.first()
-        log.debug "Using Nextflow cache factory: ${factory.getClass().getName()}"
-        return factory.newInstance(uniqueId, runName, home)
+
+        // Try each factory in priority order until one succeeds
+        Throwable lastError = null
+        for( CacheFactory factory : all ) {
+            try {
+                log.debug "Trying Nextflow cache factory: ${factory.getClass().getName()}"
+                return factory.newInstance(uniqueId, runName, home)
+            }
+            catch( IllegalArgumentException e ) {
+                // Factory can't handle this config, try next one
+                log.debug "Cache factory ${factory.getClass().getName()} not applicable: ${e.message}"
+                lastError = e
+            }
+        }
+
+        // All factories failed
+        throw lastError ?: new IllegalStateException("Unable to create Nextflow cache")
     }
 
 }
