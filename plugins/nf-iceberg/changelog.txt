@@ -1,0 +1,10 @@
+nf-iceberg changelog
+=====================
+
+0.1.0 - 2024-XX-XX
+- Initial release
+- Apache Iceberg-based global cache implementation
+- Support for S3, GCS, and local filesystem catalogs
+- ACID transactions for concurrent cache writes
+- Time travel for cache history and recovery
+- Content-addressable storage for deduplication
